@@ -60,9 +60,9 @@ ASGI_APPLICATION = 'server.asgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "medhub"),
-        "USER": os.getenv("DB_USER", "medhub_user"),
-        "PASSWORD": os.getenv("DB_PASS", "supersecret"),
+        "NAME": os.getenv("DB_NAME", "medhub_db"),
+        "USER": os.getenv("DB_USER", "sabrina"),
+        "PASSWORD": os.getenv("DB_PASS", "1234"),
         "HOST": os.getenv("DB_HOST", "localhost"),  # ← inspect this
         "PORT": os.getenv("DB_PORT", "5432"),
     }
