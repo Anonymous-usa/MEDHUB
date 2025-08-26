@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 # 4. Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',            # CORS
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',      # Static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -178,3 +179,5 @@ TEMPLATES = [
 
 # 14. Дополнительно для manage.py и автоматических команд
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
