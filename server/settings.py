@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'reviews',
     'statistics',
     'notifications',
+    "message",
+    "channels"
 ]
 
 # 4. Middleware
