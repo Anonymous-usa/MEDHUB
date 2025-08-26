@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: medhub
+      POSTGRES_USER: medhub_user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:6-alpine
+    restart: always
+  
+  web:
+    build: .
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8090:8000"
+    volumes:
+      - .:/app
+      - static_data:/app/staticfiles
+      - media_data:/app/mediafiles
+    restart: always
+    # CMD берётся из Dockerfile (gunicorn server.wsgi:application ...)
+
+  celery:
+    build: .
+    command: celery --app=server.celery:app worker -l info
+    env_file: .env
+    depends_on:
+      - redis
+      - web
+    restart: always
+
+  beat:
+    build: .
+    command: celery --app=server.celery:app beat -l info
+    env_file: .env
+    depends_on:
+      - redis
+      - web
+    restart: always
+
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:
+  

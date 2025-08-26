@@ -1,0 +1,611 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MEDHUB.TJ API",
+    "version": "1.0.0",
+    "description": "Минимальная спецификация для старта Flutter-интеграции"
+  },
+  "servers": [
+    {
+      "url": "https://api.medhub.tj",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:8000",
+      "description": "Local"
+    }
+  ],
+  "paths": {
+    "/api/v1/token/": {
+      "post": {
+        "summary": "Получить пару JWT-токенов",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenObtain"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пара токенов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenObtain"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/token/refresh/": {
+      "post": {
+        "summary": "Обновить access-токен по refresh-токену",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Новый access-токен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenRefreshResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/register/patient/": {
+      "post": {
+        "summary": "Регистрация нового пациента",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRegister"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пациент зарегистрирован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientRegister"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/": {
+      "get": {
+        "summary": "Список учреждений (публичный)",
+        "responses": {
+          "200": {
+            "description": "Массив учреждений",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstitutionPublic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/institutions/{id}/": {
+      "get": {
+        "summary": "Детальная информация об учреждении",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID учреждения"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные учреждения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionPublic"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/": {
+      "get": {
+        "summary": "Профиль текущего пользователя",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные профиля",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Обновить профиль текущего пользователя",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Профиль обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/appointments/": {
+      "get": {
+        "summary": "Список записей пациента",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Массив записей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentRequestDetail"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Новая запись на приём",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentRequestCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Запись создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentRequestCreate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/reviews/": {
+      "get": {
+        "summary": "Список отзывов текущего пациента",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Массив отзывов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewDetail"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Оставить отзыв",
+        "security": [
+          {
+            "jwtAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Отзыв создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewCreate"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TokenObtain": {
+        "type": "object",
+        "properties": {
+          "access": {
+            "type": "string",
+            "description": "JWT access-токен"
+          },
+          "refresh": {
+            "type": "string",
+            "description": "JWT refresh-токен"
+          }
+        },
+        "required": [
+          "access",
+          "refresh"
+        ]
+      },
+      "TokenRefreshRequest": {
+        "type": "object",
+        "properties": {
+          "refresh": {
+            "type": "string",
+            "description": "JWT refresh-токен"
+          }
+        },
+        "required": [
+          "refresh"
+        ]
+      },
+      "TokenRefreshResponse": {
+        "type": "object",
+        "properties": {
+          "access": {
+            "type": "string",
+            "description": "Новый access-токен"
+          }
+        },
+        "required": [
+          "access"
+        ]
+      },
+      "PatientRegister": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "+992901234567"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "name": {
+            "type": "string",
+            "example": "Иван Иванов"
+          }
+        },
+        "required": [
+          "phone",
+          "password",
+          "name"
+        ]
+      },
+      "InstitutionPublic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "institution_type": {
+            "type": "string",
+            "enum": [
+              "hospital",
+              "clinic",
+              "laboratory",
+              "other"
+            ]
+          },
+          "ownership_type": {
+            "type": "string",
+            "enum": [
+              "state",
+              "private"
+            ]
+          },
+          "region": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "logo_url": {
+            "type": "string",
+            "format": "uri",
+            "readOnly": true
+          },
+          "is_top": {
+            "type": "boolean"
+          },
+          "departments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Department"
+            },
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "institution_type",
+          "ownership_type",
+          "region",
+          "address",
+          "phone",
+          "email"
+        ]
+      },
+      "Department": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "id",
+          "phone"
+        ]
+      },
+      "AppointmentRequestCreate": {
+        "type": "object",
+        "properties": {
+          "doctor": {
+            "type": "integer"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "doctor"
+        ]
+      },
+      "AppointmentRequestDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "doctor_phone": {
+            "type": "string",
+            "readOnly": true
+          },
+          "patient_phone": {
+            "type": "string",
+            "readOnly": true
+          },
+          "note": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected"
+            ],
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "doctor_phone",
+          "patient_phone",
+          "status",
+          "created_at"
+        ]
+      },
+      "ReviewCreate": {
+        "type": "object",
+        "properties": {
+          "appointment": {
+            "type": "integer"
+          },
+          "rating": {
+            "type": "integer",
+            "enum": [1, 2, 3, 4, 5]
+          },
+          "comment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointment",
+          "rating"
+        ]
+      },
+      "ReviewDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "appointment": {
+            "type": "integer"
+          },
+          "patient_phone": {
+            "type": "string",
+            "readOnly": true
+          },
+          "doctor_phone": {
+            "type": "string",
+            "readOnly": true
+          },
+          "rating": {
+            "type": "integer",
+            "enum": [1, 2, 3, 4, 5]
+          },
+          "comment": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "appointment",
+          "patient_phone",
+          "doctor_phone",
+          "rating",
+          "created_at"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "jwtAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
