@@ -25,3 +25,5 @@ RUN python manage.py collectstatic --noinput
 # Запуск Gunicorn
 CMD ["gunicorn", "server.wsgi:application", "--bind", "0.0.0.0:8000"]
 
+RUN mkdir -p /app/staticfiles \
+    && chown -R django:django /app/staticfiles
