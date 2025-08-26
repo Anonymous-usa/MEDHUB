@@ -61,14 +61,14 @@ ASGI_APPLICATION = 'server.asgi.application'
 
 # 6. База данных (Postgres)
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "medhub_db"),
-        "USER": os.getenv("DB_USER", "sabrina"),
-        "PASSWORD": os.getenv("DB_PASS", "1234"),
-        "HOST": os.getenv("DB_HOST", "localhost"),  # ← inspect this
-        "PORT": os.getenv("DB_PORT", "5432"),
-    }
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': os.getenv('POSTGRES_DB', 'medhub'),
+    'USER': os.getenv('POSTGRES_USER', 'medhub'),
+    'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
+    'HOST': os.getenv('DB_HOST', 'localhost'),
+    'PORT': os.getenv('DB_PORT', '5432'),
+  }
 }
 
 
