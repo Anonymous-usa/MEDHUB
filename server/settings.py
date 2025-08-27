@@ -13,6 +13,7 @@ ALLOWED_HOSTS = ['*']
 # 3. Приложения
 INSTALLED_APPS = [
     # Django
+    'admin_custom',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -181,3 +182,13 @@ TEMPLATES = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+#15.
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv("REDIS_URL", "redis://redis:6379/0")],
+        },
+    },
+}
