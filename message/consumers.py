@@ -1,19 +1,25 @@
+# message/consumers.py
 
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from accounts.models import User
 from channels.db import database_sync_to_async
 from .models import Message
 
-
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope["user"]           # текущий юзер
-        self.other_user_id = self.scope["url_route"]["kwargs"]["user_id"]
-        self.room_name = f"chat_{min(self.user.id, int(self.other_user_id))}_{max(self.user.id, int(self.other_user_id))}"
-        self.room_group_name = f"chat_{self.room_name}"
+        user = self.scope["user"]
+        other_id = int(self.scope["url_route"]["kwargs"]["user_id"])
 
-        # Подключаемся к группе
+        # неавторизованным — отказ
+        if user.is_anonymous:
+            await self.close()
+            return
+
+        # формируем уникальное имя комнаты
+        a, b = sorted([user.id, other_id])
+        self.room_group_name = f"chat_{a}_{b}"
+
+        # подписываемся на группу и даём коннект
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
@@ -22,31 +28,40 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        message = data["message"]
+        content = data.get("content", "").strip()
+        if not content:
+            return
 
-        # сохраняем сообщение в БД
-        msg = await self.save_message(self.user.id, self.other_user_id, message)
+        sender = self.scope["user"]
+        receiver_id = int(self.scope["url_route"]["kwargs"]["user_id"])
 
-        # шлём его в группу
+        # сохраняем в БД
+        msg = await self._create_message(sender.id, receiver_id, content)
+
+        # рассылка события группе
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                "type": "chat_message",
-                "message": message,
-                "sender": self.user.id,
-                "receiver": self.other_user_id,
-                "created_at": str(msg.created_at),
+                "type": "chat.message",
+                "message": {
+                    "id": msg.id,
+                    "sender": sender.id,
+                    "receiver": receiver_id,
+                    "content": content,
+                    "created_at": msg.created_at.isoformat(),
+                    "is_read": msg.is_read,
+                }
             }
         )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps({
-            "message": event["message"],
-            "sender": event["sender"],
-            "receiver": event["receiver"],
-            "created_at": event["created_at"],
-        }))
+        # отсылаем JSON всем участникам
+        await self.send(text_data=json.dumps(event["message"]))
 
     @database_sync_to_async
-    def save_message(self, sender_id, receiver_id, content):
-        return Message.objects.create(sender_id=sender_id, receiver_id=receiver_id, content=content)
+    def _create_message(self, sender_id, receiver_id, content):
+        return Message.objects.create(
+            sender_id=sender_id,
+            receiver_id=receiver_id,
+            content=content
+        )

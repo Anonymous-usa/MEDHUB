@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 
     # Ваши приложения
+    'admim_custom',
     'core',
     'accounts',
     'institutions',
@@ -180,4 +181,13 @@ TEMPLATES = [
 # 14. Дополнительно для manage.py и автоматических команд
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# 15.for message in real time
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.getenv("REDIS_URL", "redis://redis:6379/0")],
+        },
+    },
+}
 
