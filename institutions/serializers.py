@@ -2,8 +2,13 @@
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from .models import Institution, Department
+from core.serializers import CitySerializer
+
 
 class DepartmentSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор отделения учреждения.
+    """
     class Meta:
         model = Department
         fields = ('id', 'name', 'description')
@@ -13,15 +18,19 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class InstitutionAdminSerializer(serializers.ModelSerializer):
     """
     Для операций super_admin и institution_admin.
+    Полный набор данных + отделения (read-only).
     """
     departments = DepartmentSerializer(many=True, read_only=True)
+    city_name = serializers.CharField(source='city.name', read_only=True)
+    region_name = serializers.CharField(source='city.region.name', read_only=True)
 
     class Meta:
-        model  = Institution
+        model = Institution
         fields = (
             'id', 'name', 'slug', 'description',
             'institution_type', 'ownership_type',
-            'region', 'address', 'phone', 'email',
+            'city', 'city_name', 'region_name',
+            'address', 'phone', 'email',
             'latitude', 'longitude', 'logo',
             'is_top', 'is_active',
             'departments', 'created_at', 'updated_at'
@@ -33,15 +42,18 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
     """
     Только для публичного списка и деталки.
     """
-    logo_url    = serializers.SerializerMethodField()
+    logo_url = serializers.SerializerMethodField()
     departments = DepartmentSerializer(many=True, read_only=True)
+    city = CitySerializer(read_only=True)
+    region_name = serializers.CharField(source='city.region.name', read_only=True)
 
     class Meta:
-        model  = Institution
+        model = Institution
         fields = (
             'id', 'name', 'slug', 'description',
             'institution_type', 'ownership_type',
-            'region', 'address', 'phone', 'email',
+            'city', 'region_name',
+            'address', 'phone', 'email',
             'latitude', 'longitude', 'logo_url',
             'is_top', 'departments'
         )

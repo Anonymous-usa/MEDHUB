@@ -1,8 +1,9 @@
 # institutions/views.py
-from rest_framework import viewsets, generics, filters, status
-from rest_framework.response import Response
+import logging
+from rest_framework import viewsets, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+
 from .models import Institution
 from .serializers import (
     InstitutionAdminSerializer,
@@ -10,32 +11,51 @@ from .serializers import (
 )
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 
+logger = logging.getLogger(__name__)
+
+
 class InstitutionViewSet(viewsets.ModelViewSet):
     """
-    create:        супер-админ
-    list/retrieve: публично (AllowAny)
+    create:              супер-админ
+    list/retrieve:       публично (AllowAny)
     update/partial_update: админ своего учреждения или супер-админ
-    destroy:       только супер-админ
+    destroy:             только супер-админ
     """
-    queryset = Institution.objects.all()
+    queryset = Institution.objects.select_related(
+        'city', 'city__region'
+    ).prefetch_related(
+        'departments'
+    )
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['institution_type', 'ownership_type', 'region', 'is_top']
-    search_fields = ['name', 'address']
+    filterset_fields = ['institution_type', 'ownership_type', 'city', 'is_top', 'is_active']
+    search_fields = ['name', 'address', 'city__name', 'city__region__name']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            perm = [AllowAny]
+            perms = [AllowAny]
         elif self.action == 'create':
-            perm = [IsAuthenticated, IsSuperAdmin]
+            perms = [IsAuthenticated, IsSuperAdmin]
         elif self.action in ['update', 'partial_update']:
-            perm = [IsAuthenticated, IsInstitutionOwnerOrSuper]
+            perms = [IsAuthenticated, IsInstitutionOwnerOrSuper]
         elif self.action == 'destroy':
-            perm = [IsAuthenticated, IsSuperAdmin]
+            perms = [IsAuthenticated, IsSuperAdmin]
         else:
-            perm = [IsAuthenticated]
-        return [p() for p in perm]
+            perms = [IsAuthenticated]
+        return [p() for p in perms]
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:
             return InstitutionPublicSerializer
         return InstitutionAdminSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        logger.info(f"Учреждение создано: {instance.name} ({instance.slug})")
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        logger.info(f"Учреждение обновлено: {instance.name} ({instance.slug})")
+
+    def perform_destroy(self, instance):
+        logger.warning(f"Учреждение удалено: {instance.name} ({instance.slug})")
+        instance.delete()

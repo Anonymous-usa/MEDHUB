@@ -9,5 +9,6 @@ router = DefaultRouter()
 router.register(r'institutions', InstitutionViewSet, basename='institution')
 
 urlpatterns = [
+    # Версия API v1: все эндпоинты учреждений
     path('v1/', include(router.urls)),
 ]
