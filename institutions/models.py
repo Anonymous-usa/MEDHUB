@@ -76,6 +76,14 @@ class Institution(TimeStampedModel, SoftDeleteModel):
             self.slug = generate_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
+    @property
+    def region(self):
+        """
+        Returns the region of the related City, if available.
+        Useful for displaying in Django Admin.
+        """
+        return getattr(self.city, "region", None)
+
 
 class Department(TimeStampedModel, SoftDeleteModel):
     institution = models.ForeignKey(
