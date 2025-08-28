@@ -5,20 +5,23 @@ from .serializers import RegionSerializer, CitySerializer
 
 class RegionListView(generics.ListAPIView):
     """
-    Публичный список регионов.
+    Публичный список активных регионов Таджикистана.
     """
-    queryset = Region.objects.filter(is_active=True)
+    queryset = Region.objects.filter(is_active=True).order_by('name')
     serializer_class = RegionSerializer
     permission_classes = [AllowAny]
 
 
 class CityListView(generics.ListAPIView):
     """
-    Список городов в выбранном регионе.
+    Список активных городов в выбранном регионе.
     """
     serializer_class = CitySerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         region_slug = self.kwargs.get('region_slug')
-        return City.objects.filter(region__slug=region_slug, is_active=True)
+        return City.objects.filter(
+            region__slug=region_slug,
+            is_active=True
+        ).order_by('name')
