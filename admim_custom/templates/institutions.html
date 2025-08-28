@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>🏥 Все учреждения</h1>
+
+<form method="get" style="margin-bottom: 20px;">
+  <label for="region">Фильтр по региону:</label>
+  <input type="text" name="region" id="region" value="{{ request.GET.region }}">
+  <button type="submit">Применить</button>
+</form>
+
+<table style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th style="padding: 8px;">Название</th>
+      <th style="padding: 8px;">Тип</th>
+      <th style="padding: 8px;">Регион</th>
+      <th style="padding: 8px;">Статус</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for institution in page_obj %}
+    <tr>
+      <td>{{ institution.name }}</td>
+      <td>{{ institution.get_institution_type_display }}</td>
+      <td>{{ institution.region }}</td>
+      <td>{{ institution.is_active|yesno:"✅,❌" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Нет учреждений по заданному фильтру.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pagination" style="margin-top: 20px;">
+  {% if page_obj.has_previous %}
+    <a href="?{% if request.GET.region %}region={{ request.GET.region }}&{% endif %}page={{ page_obj.previous_page_number }}">← Назад</a>
+  {% endif %}
+
+  <span style="margin: 0 10px;">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+  {% if page_obj.has_next %}
+    <a href="?{% if request.GET.region %}region={{ request.GET.region }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд →</a>
+  {% endif %}
+</div>
+{% endblock %}

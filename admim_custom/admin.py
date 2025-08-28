@@ -55,7 +55,7 @@ class InstitutionAdmin(admin.ModelAdmin):
         'name',
         'institution_type',
         'ownership_type',
-        'region',
+        'region',        # ✅ now a method
         'is_top',
         'is_active',
         'created_at',
@@ -63,14 +63,14 @@ class InstitutionAdmin(admin.ModelAdmin):
     list_filter = (
         'institution_type',
         'ownership_type',
-        'region',
+        'city__region',  # ✅ related lookup for filtering
         'is_top',
         'is_active',
     )
     search_fields = (
         'name',
         'slug',
-        'region',
+        'city__region',  # ✅ related lookup for searching
         'address',
         'phone',
         'email',
@@ -84,6 +84,13 @@ class InstitutionAdmin(admin.ModelAdmin):
         'mark_top',
         'remove_top',
     ]
+
+    @admin.display(description="Регион")
+    def region(self, obj):
+        """
+        Returns the region from the related City, if available.
+        """
+        return getattr(obj.city, 'region', None) or "-"
 
     def mark_active(self, request, queryset):
         updated = queryset.update(is_active=True)
@@ -104,7 +111,6 @@ class InstitutionAdmin(admin.ModelAdmin):
         updated = queryset.update(is_top=False)
         self.message_user(request, f"{updated} учреждений убраны из ТОП.")
     remove_top.short_description = "Убрать из ТОП"
-
 
 @admin.register(Department, site=admin_site)
 class DepartmentAdmin(admin.ModelAdmin):

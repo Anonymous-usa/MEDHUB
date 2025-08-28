@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🏥 {{ institution.name }}</h1>
+<p><strong>Тип:</strong> {{ institution.get_institution_type_display }}</p>
+<p><strong>Регион:</strong> {{ institution.region }}</p>
+<p><strong>Статус:</strong> {{ institution.is_active|yesno:"Активно,Неактивно" }}</p>
+
+<h2>📂 Отделения</h2>
+<ul>
+  {% for dept in departments %}
+    <li>{{ dept.name }}</li>
+  {% empty %}
+    <li>Нет отделений</li>
+  {% endfor %}
+</ul>
+
+<h2>🧑‍⚕️ Врачи</h2>
+<ul>
+  {% for doctor in doctors %}
+    <li>{{ doctor.get_full_name }} — {{ doctor.phone_number }}</li>
+  {% empty %}
+    <li>Нет врачей</li>
+  {% endfor %}
+</ul>
+
+<h2>📅 Заявки</h2>
+<ul>
+  {% for app in appointments %}
+    <li>{{ app.patient }} → {{ app.doctor }} ({{ app.status }})</li>
+  {% empty %}
+    <li>Нет заявок</li>
+  {% endfor %}
+</ul>
+
+<h2>📝 Отзывы</h2>
+<ul>
+  {% for review in reviews %}
+    <li>{{ review.appointment.patient }} → {{ review.appointment.doctor }}: {{ review.rating }} ★</li>
+  {% empty %}
+    <li>Нет отзывов</li>
+  {% endfor %}
+</ul>
+{% endblock %}

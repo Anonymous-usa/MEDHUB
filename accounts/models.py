@@ -75,3 +75,4 @@ class User(AbstractUser):
 
     def is_super_admin(self):
         return self.user_type == self.UserType.SUPER_ADMIN
+    

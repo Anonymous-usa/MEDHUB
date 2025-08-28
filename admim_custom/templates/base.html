@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Medhub Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin-dashboard' %}">Medhub Admin</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<ul class="nav-global" style="margin: 10px 0; padding: 0; list-style: none;">
+  <li style="display: inline; margin-right: 15px;">
+    <a href="{% url 'admin-dashboard' %}">📊 Дашборд</a>
+  </li>
+  <li style="display: inline; margin-right: 15px;">
+    <a href="{% url 'admin-doctors' %}">🧑‍⚕️ Врачи</a>
+  </li>
+  <li style="display: inline; margin-right: 15px;">
+    <a href="{% url 'admin-institutions' %}">🏥 Учреждения</a>
+  </li>
+</ul>
+{% endblock %}
