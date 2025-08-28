@@ -1,14 +1,32 @@
+# notifications/urls.py
 from django.urls import path
 from .views import (
     NotificationListView,
     NotificationMarkReadView,
-    NotificationMarkAllReadView
+    NotificationMarkAllReadView,
 )
 
-app_name = 'notifications'
+app_name = "notifications"
 
 urlpatterns = [
-    path('v1/notifications/',                 NotificationListView.as_view(),      name='list'),
-    path('v1/notifications/<int:pk>/read/',   NotificationMarkReadView.as_view(),  name='mark-read'),
-    path('v1/notifications/read-all/',        NotificationMarkAllReadView.as_view(), name='mark-all-read'),
+    # 📥 Получить список всех уведомлений текущего пользователя
+    path(
+        "v1/notifications/",
+        NotificationListView.as_view(),
+        name="list"
+    ),
+
+    # ✅ Пометить одно уведомление как прочитанное
+    path(
+        "v1/notifications/<int:pk>/read/",
+        NotificationMarkReadView.as_view(),
+        name="mark-read"
+    ),
+
+    # 📦 Пометить все уведомления как прочитанные
+    path(
+        "v1/notifications/read-all/",
+        NotificationMarkAllReadView.as_view(),
+        name="mark-all-read"
+    ),
 ]
