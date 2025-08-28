@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.translation import gettext_lazy as _
 
 from .models import User
 from .serializers import (
@@ -14,8 +15,10 @@ from .serializers import (
     UserProfileSerializer,
     LoginSerializer
 )
+from .validators import validate_phone_number
 
 logger = logging.getLogger(__name__)
+
 
 class PatientRegistrationView(APIView):
     permission_classes = [AllowAny]
@@ -28,51 +31,55 @@ class PatientRegistrationView(APIView):
 
         try:
             user = serializer.save()
-            # здесь можно отправить SMS/email для подтверждения аккаунта
+            logger.info(f"Пациент зарегистрирован: {user.phone_number}")
+            # TODO: отправить SMS/email для подтверждения аккаунта
             return Response({
-                "detail": "Пациент успешно зарегистрирован. Подтвердите аккаунт через SMS/Email."
+                "detail": _("Пациент успешно зарегистрирован. Подтвердите аккаунт через SMS/Email.")
             }, status=status.HTTP_201_CREATED)
 
         except IntegrityError:
             return Response(
-                {"detail": "Пользователь с таким номером телефона или email уже существует."},
+                {"detail": _("Пользователь с таким номером телефона или email уже существует.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
             logger.exception("Ошибка при регистрации пациента")
             return Response(
-                {"detail": "Внутренняя ошибка сервера."},
+                {"detail": _("Внутренняя ошибка сервера.")},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        phone_number = serializer.validated_data['phone_number']
+        phone_number = validate_phone_number(serializer.validated_data['phone_number'])
         password = serializer.validated_data['password']
         user = authenticate(phone_number=phone_number, password=password)
 
         if user is None:
             return Response(
-                {"detail": "Неверный номер телефона или пароль."},
+                {"detail": _("Неверный номер телефона или пароль.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if not user.is_active:
             return Response(
-                {"detail": "Аккаунт деактивирован."},
+                {"detail": _("Аккаунт деактивирован.")},
                 status=status.HTTP_403_FORBIDDEN
             )
         if not user.is_verified:
             return Response(
-                {"detail": "Аккаунт не верифицирован."},
+                {"detail": _("Аккаунт не верифицирован.")},
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        logger.info(f"Пользователь вошёл: {user.phone_number}")
         refresh = RefreshToken.for_user(user)
         return Response({
             "user": UserProfileSerializer(user).data,
@@ -82,6 +89,7 @@ class LoginView(APIView):
             }
         }, status=status.HTTP_200_OK)
 
+
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -90,11 +98,17 @@ class UserProfileView(APIView):
         return Response(serializer.data)
 
     def put(self, request):
+        if not request.user.is_patient():
+            return Response(
+                {"detail": _("Редактирование профиля доступно только пациентам.")},
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = UserProfileSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -103,15 +117,15 @@ class LogoutView(APIView):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
             return Response(
-                {"detail": "Токен не предоставлен."},
+                {"detail": _("Токен не предоставлен.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response({"detail": "Успешный выход из системы."}, status=status.HTTP_200_OK)
+            return Response({"detail": _("Успешный выход из системы.")}, status=status.HTTP_200_OK)
         except Exception:
             return Response(
-                {"detail": "Неверный токен."},
+                {"detail": _("Неверный токен.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
