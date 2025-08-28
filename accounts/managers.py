@@ -4,7 +4,6 @@ import re
 
 class CustomUserManager(BaseUserManager):
     def normalize_phone_number(self, phone_number):
-        # Убираем пробелы и дефисы, приводим "0XXXXXXXXX" → "+992XXXXXXXXX"
         phone_number = re.sub(r'[\s\-\(\)]', '', phone_number)
         if phone_number.startswith('0') and len(phone_number) == 10:
             phone_number = '+992' + phone_number[1:]
@@ -20,6 +19,14 @@ class CustomUserManager(BaseUserManager):
 
         phone_number = self.normalize_phone_number(phone_number)
         email = self.normalize_email(email)
+
+        user_type = extra_fields.get('user_type', self.model.UserType.PATIENT)
+        institution = extra_fields.get('institution', None)
+
+        if user_type in [self.model.UserType.DOCTOR, self.model.UserType.INSTITUTION_ADMIN] and not institution:
+            raise ValueError(_('Доктор и администратор учреждения должны быть привязаны к учреждению'))
+        if user_type == self.model.UserType.PATIENT and institution:
+            raise ValueError(_('Пациент не должен быть привязан к учреждению'))
 
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_verified', False)
