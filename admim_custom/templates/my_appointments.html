@@ -1,0 +1,26 @@
+{% extends "base_site.html" %}
+{% block content %}
+<h1>📅 Заявки к моим врачам</h1>
+<table style="border-collapse: collapse; width: 100%;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th>Пациент</th>
+      <th>Врач</th>
+      <th>Статус</th>
+      <th>Дата</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for app in appointments %}
+    <tr>
+      <td>{{ app.patient.get_full_name }}</td>
+      <td>{{ app.doctor.get_full_name }}</td>
+      <td>{{ app.status }}</td>
+      <td>{{ app.created_at|date:"d.m.Y H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Нет заявок</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

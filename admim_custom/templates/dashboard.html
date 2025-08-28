@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>📊 Статистика платформы</h1>
+
+<table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th style="padding: 8px; text-align: left;">Метрика</th>
+      <th style="padding: 8px; text-align: left;">Значение</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Всего заявок</td><td>{{ stats.appointments_total }}</td></tr>
+    <tr><td>Принятые заявки</td><td>{{ stats.appointments_accepted }}</td></tr>
+    <tr><td>Ожидающие заявки</td><td>{{ stats.appointments_pending }}</td></tr>
+    <tr><td>Отклонённые заявки</td><td>{{ stats.appointments_rejected }}</td></tr>
+    <tr><td>Всего учреждений</td><td>{{ stats.institutions_total }}</td></tr>
+    <tr><td>Всего врачей</td><td>{{ stats.doctors_total }}</td></tr>
+    <tr><td>Всего отзывов</td><td>{{ stats.reviews_total }}</td></tr>
+  </tbody>
+</table>
+{% endblock %}

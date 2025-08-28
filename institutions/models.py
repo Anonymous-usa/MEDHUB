@@ -68,13 +68,21 @@ class Institution(TimeStampedModel, SoftDeleteModel):
             models.Index(fields=['institution_type']),
         ]
 
-    def __str__(self):
+    def str(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, self.name)
         super().save(*args, **kwargs)
+
+    @property
+    def region(self):
+        """
+        Returns the region of the related City, if available.
+        Useful for displaying in Django Admin.
+        """
+        return getattr(self.city, "region", None)
 
 
 class Department(TimeStampedModel, SoftDeleteModel):
@@ -96,5 +104,5 @@ class Department(TimeStampedModel, SoftDeleteModel):
             models.Index(fields=['is_active']),
         ]
 
-    def __str__(self):
+    def str(self):
         return f"{self.institution.name} — {self.name}"

@@ -155,7 +155,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'admin_custom' / 'templates'],  # 👈 путь к шаблонам
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

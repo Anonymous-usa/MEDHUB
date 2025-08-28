@@ -12,9 +12,14 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from admim_custom import urls as admin_custom_urls
+
 urlpatterns = [
     # 🛠 Админка Django
     path("admin/", admin.site.urls),
+    # Админка Django
+    path('admin/', admin.site.urls),
+    path('admin/', include(admin_custom_urls)),  
 
     # 📦 Основные модули API (v1)
     path("api/", include("accounts.urls",      namespace="accounts")),
