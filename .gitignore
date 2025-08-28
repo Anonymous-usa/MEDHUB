@@ -1,16 +1,67 @@
+# =====================
 # Python
+# =====================
 __pycache__/
 *.py[cod]
 *.sqlite3
+*.pyo
+*.pyd
+*.so
 
-# Env
+# =====================
+# Environment / virtualenv
+# =====================
 .env
+.env.*
 .venv/
+venv/
+env/
 
-# Static/media
+# =====================
+# Static & media (collected/generated)
+# =====================
 staticfiles/
 mediafiles/
 
-# IDE
+# =====================
+# IDE / Editor
+# =====================
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
+
+# =====================
+# Logs
+# =====================
+*.log
+logs/
+celerybeat-schedule
+celerybeat.pid
+
+# =====================
+# Django / Channels
+# =====================
+*.db
+db.sqlite3
+channel_layers/
+asgi_debug.log
+
+# =====================
+# Node / Frontend (if integrated)
+# =====================
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+dist/
+build/
+
+# =====================
+# Coverage / Test
+# =====================
+htmlcov/
+.coverage
+coverage.xml
+pytest_cache/
+.tox/

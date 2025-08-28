@@ -3,54 +3,72 @@ version: '3.8'
 services:
   db:
     image: postgres:14
+    env_file: .env
     environment:
-      POSTGRES_DB: medhub
-      POSTGRES_USER: medhub_user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:6-alpine
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   
   web:
-    build: .
+    build:
+      context: .
     env_file: .env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8090:8000"
     volumes:
       - .:/app
       - static_data:/app/staticfiles
       - media_data:/app/mediafiles
-    restart: always
+    restart: unless-stopped
     # CMD берётся из Dockerfile (gunicorn server.wsgi:application ...)
 
   celery:
-    build: .
+    build:
+      context: .
     command: celery --app=server.celery:app worker -l info
     env_file: .env
     depends_on:
-      - redis
-      - web
-    restart: always
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
 
   beat:
-    build: .
+    build:
+      context: .
     command: celery --app=server.celery:app beat -l info
     env_file: .env
     depends_on:
-      - redis
-      - web
-    restart: always
-
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   static_data:
   media_data:
-  

@@ -1,8 +1,15 @@
+# notification/permissions.py
 from rest_framework import permissions
+
 
 class IsRecipient(permissions.BasePermission):
     """
-    Пользователь может работать только со своими уведомлениями.
+    Разрешает доступ только к уведомлениям,
+    получателем которых является текущий аутентифицированный пользователь.
     """
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_authenticated and obj.recipient_id == request.user.id
+    def has_object_permission(self, request, view, obj) -> bool:
+        return (
+            request.user.is_authenticated
+            and hasattr(obj, 'recipient_id')
+            and obj.recipient_id == request.user.id
+        )

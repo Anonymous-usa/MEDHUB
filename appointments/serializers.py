@@ -16,10 +16,16 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return AppointmentRequest.objects.create(
-            patient=user,
-            **validated_data
-        )
+        doctor = validated_data['doctor']
+        existing = AppointmentRequest.objects.filter(
+            patient=user, doctor=doctor, status=AppointmentRequest.Status.PENDING
+        ).first()
+        if existing:
+            raise serializers.ValidationError(
+                {'detail': _('У вас уже есть активная заявка к этому врачу')}
+            )
+        return AppointmentRequest.objects.create(patient=user, **validated_data)
+
 
 class AppointmentRequestDetailSerializer(serializers.ModelSerializer):
     patient_phone = serializers.CharField(source='patient.phone_number', read_only=True)
@@ -46,8 +52,15 @@ class AppointmentStatusUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        # При принятии заявка становится единственной у врача
         new_status = validated_data['status']
         instance.status = new_status
         instance.save()
+    
+        if new_status == AppointmentRequest.Status.ACCEPTED:
+            AppointmentRequest.objects.filter(
+                doctor=instance.doctor,
+                status=AppointmentRequest.Status.PENDING
+            ).exclude(id=instance.id).update(status=AppointmentRequest.Status.REJECTED)
+    
         return instance
+

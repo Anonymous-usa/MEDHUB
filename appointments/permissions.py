@@ -4,9 +4,16 @@ class IsPatient(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_patient()
 
+
 class IsDoctor(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_doctor()
+
+
+class IsSuperAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_super_admin()
+
 
 class IsOwnerOrDoctor(permissions.BasePermission):
     """

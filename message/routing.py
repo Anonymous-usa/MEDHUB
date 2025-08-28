@@ -1,6 +1,12 @@
+# message/routing.py
 from django.urls import re_path
-from message.consumers import ChatConsumer
+from .consumers import ChatConsumer
 
 websocket_urlpatterns = [
-    re_path(r"ws/chat/(?P<user_id>\d+)/$", ChatConsumer.as_asgi()),
+    # WebSocket для приватного чата между пользователями
+    re_path(
+        r"^ws/chat/(?P<user_id>\d+)/$",
+        ChatConsumer.as_asgi(),
+        name="private_chat_ws"
+    ),
 ]
