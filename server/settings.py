@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Переменные окружения
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'replace-me-with-secure-random')
-DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 # 3. Приложения
@@ -155,7 +155,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'admin_custom' / 'templates'],  # 👈 путь к шаблонам
+        'DIRS': [BASE_DIR /'templates'],  # 👈 путь к шаблонам
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

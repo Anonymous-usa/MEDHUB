@@ -14,12 +14,6 @@ class User(AbstractUser):
         INSTITUTION_ADMIN = 'institution_admin', _('Администратор учреждения')
         SUPER_ADMIN = 'super_admin', _('Супер администратор')
 
-    user_type = models.CharField(
-        max_length=20,
-        choices=UserType.choices,
-        default=UserType.PATIENT,
-        db_index=True
-    )
     phone_number = models.CharField(
         max_length=15,
         unique=True,
@@ -29,6 +23,12 @@ class User(AbstractUser):
     email = models.EmailField(_("Email"), unique=True)
     date_of_birth = models.DateField(null=True, blank=True, verbose_name=_("Дата рождения"))
 
+    user_type = models.CharField(
+        max_length=30,
+        choices=UserType.choices,
+        default=UserType.PATIENT,
+        db_index=True
+    )
     institution = models.ForeignKey(
         'institutions.Institution',
         on_delete=models.SET_NULL,
@@ -75,4 +75,3 @@ class User(AbstractUser):
 
     def is_super_admin(self):
         return self.user_type == self.UserType.SUPER_ADMIN
-    

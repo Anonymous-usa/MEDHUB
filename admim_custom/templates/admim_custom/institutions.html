@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}🏥 Все учреждения — MEDHUB.TJ{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">🏥 Все учреждения</h2>
+
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-md-6">
+      <label for="region" class="form-label">Фильтр по региону:</label>
+      <input type="text" name="region" id="region" class="form-control" value="{{ request.GET.region }}">
+    </div>
+    <div class="col-md-6 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary">Применить</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Название</th>
+          <th>Тип</th>
+          <th>Регион</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for institution in page_obj %}
+        <tr>
+          <td>{{ institution.name }}</td>
+          <td>{{ institution.get_institution_type_display }}</td>
+          <td>{{ institution.region }}</td>
+          <td>
+            <span class="badge {% if institution.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ institution.is_active|yesno:"Активно,Неактивно" }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-center text-muted">Нет учреждений по заданному фильтру.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav aria-label="Пагинация">
+    <ul class="pagination justify-content-center mt-4">
+      {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?{% if request.GET.region %}region={{ request.GET.region }}&{% endif %}page={{ page_obj.previous_page_number }}">← Назад</a>
+      </li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      </li>
+
+      {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?{% if request.GET.region %}region={{ request.GET.region }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд →</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endblock %}

@@ -1,25 +1,19 @@
-# server/urls.py
-from django.contrib import admin
 from django.urls import path, include
-
-# JWT refresh endpoint
 from rest_framework_simplejwt.views import TokenRefreshView
-
-# drf-spectacular views
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
 
+# Кастомная админка MEDHUB.TJ
+from admim_custom.admin_site import admin_site
 from admim_custom import urls as admin_custom_urls
 
 urlpatterns = [
-    # 🛠 Админка Django
-    path("admin/", admin.site.urls),
-    # Админка Django
-    path('admin/', admin.site.urls),
-    path('admin/', include(admin_custom_urls)),  
+    # 🛠 Кастомная админ-панель
+    path("admin/", admin_site.urls),  # заменяет стандартную админку
+    path("admin-panel/", include(admin_custom_urls, namespace="admim_custom")),
 
     # 📦 Основные модули API (v1)
     path("api/", include("accounts.urls",      namespace="accounts")),
@@ -29,7 +23,6 @@ urlpatterns = [
     path("api/", include("reviews.urls",       namespace="reviews")),
     path("api/", include("statistics.urls",    namespace="statistics")),
     path("api/", include("notifications.urls", namespace="notifications")),
-    # If you add chat/WS routes, they would go here
 
     # 🔑 JWT — обновление access токена
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -38,16 +31,8 @@ urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
 
     # 🖥 Swagger UI
-    path(
-        "api/docs/swagger/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui"
-    ),
+    path("api/docs/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 
     # 📘 ReDoc UI
-    path(
-        "api/docs/redoc/",
-        SpectacularRedocView.as_view(url_name="schema"),
-        name="redoc"
-    ),
+    path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
