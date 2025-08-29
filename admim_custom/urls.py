@@ -1,13 +1,19 @@
-# admin_custom/urls.py
 from django.urls import path
-from .views import dashboard_view, doctors_view, institution_detail_view, my_institution_view, my_appointments_view, my_reviews_view
+from admim_custom import views
 
+app_name = "admim_custom"
 
 urlpatterns = [
-    path('dashboard/', dashboard_view, name='admin-dashboard'),
-    path('doctors/', doctors_view, name='admin-doctors'),
-    path('institution/<int:institution_id>/', institution_detail_view, name='admin-institution-detail'),
-    path('my-institution/', my_institution_view, name='admin-my-institution'),
-    path('my-appointments/', my_appointments_view, name='admin-my-appointments'),
-    path('my-reviews/', my_reviews_view, name='admin-my-reviews'),
+    path("dashboard/", views.dashboard_view, name="dashboard"),
+    path("institutions/", views.institutions_view, name="institutions"),
+    path("institutions/<int:institution_id>/", views.institution_detail_view, name="institution_detail"),
+    path("doctors/", views.doctors_view, name="doctors"),
+
+    # Панель учреждения
+    path("my-institution/", views.my_institution_view, name="my_institution"),
+    path("my-appointments/", views.my_appointments_view, name="my_appointments"),
+    path("my-reviews/", views.my_reviews_view, name="my_reviews"),
+
+    # Панель врача
+    path("my-requests/", views.my_requests_view, name="my_requests"),
 ]

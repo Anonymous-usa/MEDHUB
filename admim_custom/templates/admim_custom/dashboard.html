@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}📊 Статистика платформы{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">📊 Статистика платформы</h2>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Метрика</th>
+        <th>Значение</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Всего заявок</td><td>{{ stats.appointments_total }}</td></tr>
+      <tr><td>Принятые заявки</td><td>{{ stats.appointments_accepted }}</td></tr>
+      <tr><td>Ожидающие заявки</td><td>{{ stats.appointments_pending }}</td></tr>
+      <tr><td>Отклонённые заявки</td><td>{{ stats.appointments_rejected }}</td></tr>
+      <tr><td>Всего учреждений</td><td>{{ stats.institutions_total }}</td></tr>
+      <tr><td>Всего врачей</td><td>{{ stats.doctors_total }}</td></tr>
+      <tr><td>Всего отзывов</td><td>{{ stats.reviews_total }}</td></tr>
+    </tbody>
+  </table>
+
+  <h4 class="mt-5">📈 Заявки по статусу</h4>
+  <canvas id="appointmentsChart" width="400" height="200"></canvas>
+</div>
+
+<!-- Add Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('appointmentsChart').getContext('2d');
+  const appointmentsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Принятые', 'Ожидающие', 'Отклонённые'],
+      datasets: [{
+        label: 'Количество заявок',
+        data: [
+          {{ stats.appointments_accepted }},
+          {{ stats.appointments_pending }},
+          {{ stats.appointments_rejected }}
+        ],
+        backgroundColor: ['#198754', '#ffc107', '#dc3545'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+{% endblock %}
