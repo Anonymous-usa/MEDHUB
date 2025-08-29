@@ -1,8 +1,6 @@
-# message/serializers.py
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from .models import Message
-
 
 class MessageSerializer(serializers.ModelSerializer):
     """
@@ -27,11 +25,14 @@ class MessageSerializer(serializers.ModelSerializer):
             'sender', 'sender_name', 'receiver_name'
         ]
 
+    def validate(self, attrs):
+        sender = self.context['request'].user
+        receiver = attrs.get('receiver')
+        roles = {sender.user_type, receiver.user_type}
+        if roles != {"doctor", "patient"}:
+            raise serializers.ValidationError(_("Чат разрешён только между доктором и пациентом"))
+        return attrs
+
     def create(self, validated_data):
-        """
-        Автоматически подставляем отправителя из request.user.
-        """
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            validated_data['sender'] = request.user
+        validated_data['sender'] = self.context['request'].user
         return super().create(validated_data)

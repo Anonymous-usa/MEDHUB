@@ -23,6 +23,8 @@ urlpatterns = [
     path("api/", include("reviews.urls",       namespace="reviews")),
     path("api/", include("statistics.urls",    namespace="statistics")),
     path("api/", include("notifications.urls", namespace="notifications")),
+    path("api/", include("message.urls", namespace="message")),
+
 
     # 🔑 JWT — обновление access токена
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
