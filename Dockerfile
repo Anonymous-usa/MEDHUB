@@ -1,7 +1,8 @@
 # ---------------------------
 # Base image
 # ---------------------------
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
+
 
 # Avoid Python buffering issues
 ENV PYTHONUNBUFFERED=1 \
@@ -17,7 +18,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        build-essential \
        libpq-dev \
+       libpq5 \
        gcc \
+       postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------
