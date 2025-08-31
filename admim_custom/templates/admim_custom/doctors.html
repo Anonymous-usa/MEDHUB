@@ -6,43 +6,52 @@
 <div class="container mt-4">
   <h2 class="mb-4">🧑‍⚕️ Все врачи</h2>
 
-  <form method="get" class="row g-3 mb-4">
-    <div class="col-md-6">
-      <label for="institution" class="form-label">Фильтр по учреждению:</label>
-      <input type="text" name="institution" id="institution" class="form-control" value="{{ request.GET.institution }}">
-    </div>
-    <div class="col-md-6 d-flex align-items-end">
-      <button type="submit" class="btn btn-primary">Применить</button>
-    </div>
-  </form>
+  <!-- Фильтр по учреждению -->
+  <details class="mb-4" open>
+    <summary class="summary-toggle h5 mb-2">🔍 Фильтр по учреждению</summary>
+    <form method="get" class="row g-3 mt-3">
+      <div class="col-md-6">
+        <label for="institution" class="form-label">Учреждение:</label>
+        <input type="text" name="institution" id="institution" class="form-control" value="{{ request.GET.institution }}">
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary">Применить</button>
+      </div>
+    </form>
+  </details>
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>ФИО</th>
-          <th>Телефон</th>
-          <th>Учреждение</th>
-          <th>Статус</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for doctor in page_obj %}
-        <tr>
-          <td>{{ doctor.get_full_name }}</td>
-          <td>{{ doctor.phone_number }}</td>
-          <td>{{ doctor.institution.name }}</td>
-          <td>{{ doctor.is_verified|yesno:"✅,❌" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="4" class="text-center text-muted">Нет врачей по заданному фильтру.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <!-- Таблица врачей -->
+  <details open>
+    <summary class="summary-toggle h5 mb-2">📋 Список врачей</summary>
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>ФИО</th>
+            <th>Телефон</th>
+            <th>Учреждение</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doctor in page_obj %}
+          <tr>
+            <td>{{ doctor.get_full_name }}</td>
+            <td>{{ doctor.phone_number }}</td>
+            <td>{{ doctor.institution.name }}</td>
+            <td>{{ doctor.is_verified|yesno:"✅,❌" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted">Нет врачей по заданному фильтру.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
 
+  <!-- Пагинация -->
   <nav aria-label="Пагинация">
     <ul class="pagination justify-content-center mt-4">
       {% if page_obj.has_previous %}
@@ -63,4 +72,25 @@
     </ul>
   </nav>
 </div>
+
+<!-- Стили для summary -->
+<style>
+  .summary-toggle {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+  }
+  details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+</style>
 {% endblock %}

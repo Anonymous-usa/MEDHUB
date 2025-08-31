@@ -4,66 +4,106 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2 class="mb-3">🏥 Моё учреждение: {{ institution.name }}</h2>
+  <h2 class="mb-3">🏥 Моё учреждение: <strong>{{ institution.name }}</strong></h2>
 
-  <div class="mb-4">
-    <p><strong>Тип:</strong> {{ institution.get_institution_type_display }}</p>
-    <p><strong>Регион:</strong> {{ institution.region }}</p>
-    <p><strong>Статус:</strong>
-      <span class="badge {% if institution.is_active %}bg-success{% else %}bg-secondary{% endif %}">
-        {{ institution.is_active|yesno:"Активно,Неактивно" }}
-      </span>
-    </p>
-  </div>
-
-  <h4 class="mt-4">📂 Отделения</h4>
-  <ul class="list-group mb-4">
-    {% for dept in departments %}
-      <li class="list-group-item">{{ dept.name }}</li>
-    {% empty %}
-      <li class="list-group-item text-muted">Нет отделений</li>
-    {% endfor %}
-  </ul>
-
-  <h4>🧑‍⚕️ Врачи</h4>
-  <ul class="list-group mb-4">
-    {% for doctor in doctors %}
-      <li class="list-group-item">
-        {{ doctor.get_full_name }} — <span class="text-muted">{{ doctor.phone_number }}</span>
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">Нет врачей</li>
-    {% endfor %}
-  </ul>
-
-  <h4>📅 Заявки</h4>
-  <ul class="list-group mb-4">
-    {% for app in appointments %}
-      <li class="list-group-item">
-        {{ app.patient.get_full_name }} → {{ app.doctor.get_full_name }}
-        <span class="badge 
-          {% if app.status == 'accepted' %}bg-success
-          {% elif app.status == 'pending' %}bg-warning text-dark
-          {% elif app.status == 'rejected' %}bg-danger
-          {% else %}bg-secondary{% endif %}">
-          {{ app.status|capfirst }}
+  <!-- Основная информация -->
+  <details open class="mb-4">
+    <summary class="summary-toggle h5 mb-2">ℹ️ Информация об учреждении</summary>
+    <div class="mt-3">
+      <p><strong>Тип:</strong> {{ institution.get_institution_type_display }}</p>
+      <p><strong>Регион:</strong> {{ institution.region }}</p>
+      <p><strong>Статус:</strong>
+        <span class="badge {% if institution.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+          {% if institution.is_active %}✅ Активно{% else %}❌ Неактивно{% endif %}
         </span>
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">Нет заявок</li>
-    {% endfor %}
-  </ul>
+      </p>
+    </div>
+  </details>
 
-  <h4>📝 Отзывы</h4>
-  <ul class="list-group mb-5">
-    {% for review in reviews %}
-      <li class="list-group-item">
-        {{ review.appointment.patient.get_full_name }} → {{ review.appointment.doctor.get_full_name }}:
-        <strong>{{ review.rating }} ★</strong>
-      </li>
-    {% empty %}
-      <li class="list-group-item text-muted">Нет отзывов</li>
-    {% endfor %}
-  </ul>
+  <!-- Отделения -->
+  <details open class="mb-4">
+    <summary class="summary-toggle h5 mb-2">📂 Отделения</summary>
+    <ul class="list-group mt-3">
+      {% for dept in departments %}
+        <li class="list-group-item">🏢 {{ dept.name }}</li>
+      {% empty %}
+        <li class="list-group-item text-muted">Нет отделений</li>
+      {% endfor %}
+    </ul>
+  </details>
+
+  <!-- Врачи -->
+  <details open class="mb-4">
+    <summary class="summary-toggle h5 mb-2">🧑‍⚕️ Врачи</summary>
+    <ul class="list-group mt-3">
+      {% for doctor in doctors %}
+        <li class="list-group-item">
+          👨‍⚕️ {{ doctor.get_full_name }} — <span class="text-muted">📞 {{ doctor.phone_number }}</span>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Нет врачей</li>
+      {% endfor %}
+    </ul>
+  </details>
+
+  <!-- Заявки -->
+  <details open class="mb-4">
+    <summary class="summary-toggle h5 mb-2">📅 Заявки</summary>
+    <ul class="list-group mt-3">
+      {% for app in appointments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ app.patient.get_full_name }} → {{ app.doctor.get_full_name }}
+          <span class="badge 
+            {% if app.status == 'accepted' %}bg-success
+            {% elif app.status == 'pending' %}bg-warning text-dark
+            {% elif app.status == 'rejected' %}bg-danger
+            {% else %}bg-secondary{% endif %}">
+            {% if app.status == 'accepted' %}✅ Принята
+            {% elif app.status == 'pending' %}⏳ В ожидании
+            {% elif app.status == 'rejected' %}❌ Отклонена
+            {% else %}❔ Неизвестно{% endif %}
+          </span>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Нет заявок</li>
+      {% endfor %}
+    </ul>
+  </details>
+
+  <!-- Отзывы -->
+  <details open class="mb-5">
+    <summary class="summary-toggle h5 mb-2">📝 Отзывы</summary>
+    <ul class="list-group mt-3">
+      {% for review in reviews %}
+        <li class="list-group-item">
+          {{ review.appointment.patient.get_full_name }} → {{ review.appointment.doctor.get_full_name }}:
+          <strong>{{ review.rating }} ★</strong>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Нет отзывов</li>
+      {% endfor %}
+    </ul>
+  </details>
 </div>
+
+<!-- Стили для summary -->
+<style>
+  .summary-toggle {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+  }
+  details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+</style>
 {% endblock %}

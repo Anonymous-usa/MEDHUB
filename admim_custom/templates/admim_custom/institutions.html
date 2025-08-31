@@ -6,16 +6,21 @@
 <div class="container mt-4">
   <h2 class="mb-4">🏥 Все учреждения</h2>
 
-  <form method="get" class="row g-3 mb-4">
-    <div class="col-md-6">
-      <label for="region" class="form-label">Фильтр по региону:</label>
-      <input type="text" name="region" id="region" class="form-control" value="{{ request.GET.region }}">
-    </div>
-    <div class="col-md-6 d-flex align-items-end">
-      <button type="submit" class="btn btn-primary">Применить</button>
-    </div>
-  </form>
+  <!-- Фильтр по региону -->
+  <details class="mb-4" open>
+    <summary class="summary-toggle h5 mb-2">🔍 Фильтр по региону</summary>
+    <form method="get" class="row g-3 mt-3">
+      <div class="col-md-6">
+        <label for="region" class="form-label">Регион:</label>
+        <input type="text" name="region" id="region" class="form-control" value="{{ request.GET.region }}">
+      </div>
+      <div class="col-md-6 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary">Применить</button>
+      </div>
+    </form>
+  </details>
 
+  <!-- Таблица учреждений -->
   <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle">
       <thead class="table-light">
@@ -33,8 +38,12 @@
           <td>{{ institution.get_institution_type_display }}</td>
           <td>{{ institution.region }}</td>
           <td>
-            <span class="badge {% if institution.is_active %}bg-success{% else %}bg-secondary{% endif %}">
-              {{ institution.is_active|yesno:"Активно,Неактивно" }}
+            <span class="badge d-inline-flex align-items-center {% if institution.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+              {% if institution.is_active %}
+                ✅ Активно
+              {% else %}
+                ❌ Неактивно
+              {% endif %}
             </span>
           </td>
         </tr>
@@ -47,6 +56,7 @@
     </table>
   </div>
 
+  <!-- Пагинация -->
   <nav aria-label="Пагинация">
     <ul class="pagination justify-content-center mt-4">
       {% if page_obj.has_previous %}
@@ -55,7 +65,7 @@
       </li>
       {% endif %}
 
-      <li class="page-item disabled">
+      <li class="page-item active">
         <span class="page-link">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
       </li>
 
@@ -67,4 +77,25 @@
     </ul>
   </nav>
 </div>
+
+<!-- Стили для summary -->
+<style>
+  .summary-toggle {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+  }
+  details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+</style>
 {% endblock %}

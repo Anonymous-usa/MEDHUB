@@ -6,39 +6,72 @@
 <div class="container mt-4">
   <h2 class="mb-4">📅 Заявки к моим врачам</h2>
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Пациент</th>
-          <th>Врач</th>
-          <th>Статус</th>
-          <th>Дата</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for app in appointments %}
-        <tr>
-          <td>{{ app.patient.get_full_name }}</td>
-          <td>{{ app.doctor.get_full_name }}</td>
-          <td>
-            <span class="badge 
-              {% if app.status == 'accepted' %}bg-success
-              {% elif app.status == 'pending' %}bg-warning text-dark
-              {% elif app.status == 'rejected' %}bg-danger
-              {% else %}bg-secondary{% endif %}">
-              {{ app.status|capfirst }}
-            </span>
-          </td>
-          <td>{{ app.created_at|date:"d.m.Y H:i" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="4" class="text-center text-muted">Нет заявок</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <!-- Таблица заявок -->
+  <details open>
+    <summary class="summary-toggle h5 mb-2">📋 Список заявок</summary>
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>👤 Пациент</th>
+            <th>🧑‍⚕️ Врач</th>
+            <th>📌 Статус</th>
+            <th>🕒 Дата</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in appointments %}
+          <tr>
+            <td>{{ app.patient.get_full_name }}</td>
+            <td>{{ app.doctor.get_full_name }}</td>
+            <td>
+              <span class="badge d-inline-flex align-items-center 
+                {% if app.status == 'accepted' %}bg-success
+                {% elif app.status == 'pending' %}bg-warning text-dark
+                {% elif app.status == 'rejected' %}bg-danger
+                {% else %}bg-secondary{% endif %}">
+                {% if app.status == 'accepted' %}
+                  ✅ Принята
+                {% elif app.status == 'pending' %}
+                  ⏳ В ожидании
+                {% elif app.status == 'rejected' %}
+                  ❌ Отклонена
+                {% else %}
+                  ❔ Неизвестно
+                {% endif %}
+              </span>
+            </td>
+            <td>{{ app.created_at|date:"d.m.Y H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted">Нет заявок</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
 </div>
+
+<!-- Стили для summary -->
+<style>
+  .summary-toggle {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+  details > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+  }
+  details[open] > summary::before {
+    transform: rotate(90deg);
+  }
+</style>
 {% endblock %}

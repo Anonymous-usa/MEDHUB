@@ -17,3 +17,4 @@ urlpatterns = [
     # Панель врача
     path("my-requests/", views.my_requests_view, name="my_requests"),
 ]
+
