@@ -3,17 +3,19 @@ from pathlib import Path
 from datetime import timedelta
 from django.utils.translation import gettext_lazy as _
 
-# 1. Пути
+# 1. Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 2. Переменные окружения
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'replace-me-with-secure-random')
+# 2. Environment
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY is not set in environment")
+
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-# 3. Приложения
+# 3. Installed apps
 INSTALLED_APPS = [
-    # Django core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -21,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Сторонние
     'corsheaders',
     'django_filters',
     'drf_spectacular',
@@ -29,7 +30,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'channels',
 
-    # Ваши приложения
     'admim_custom',
     'core',
     'accounts',
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,12 +55,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# 5. URLs и WSGI/ASGI
+# 5. URLs and WSGI/ASGI
 ROOT_URLCONF = 'server.urls'
 WSGI_APPLICATION = 'server.wsgi.application'
 ASGI_APPLICATION = 'server.asgi.application'
 
-# 6. База данных
+# 6. Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -72,7 +72,7 @@ DATABASES = {
     }
 }
 
-# 7. Аутентификация
+# 7. Authentication
 AUTH_USER_MODEL = 'accounts.User'
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.PhoneNumberBackend',
@@ -85,7 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# 8. Локализация
+# 8. Localization
 LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'ru')
 LANGUAGES = [
     ('ru', _('Russian')),
@@ -98,14 +98,15 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# 9. Статика/Медиа
+# 9. Static & Media
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
 # 10. CORS
-# Better: read from env, fallback to allow all in DEV
 raw_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
 CORS_ALLOWED_ORIGINS = [o.strip() for o in raw_cors.split(",") if o.strip()]
 CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS
@@ -144,7 +145,7 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# 12. Celery (Redis)
+# 12. Celery
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', os.getenv('REDIS_URL', 'redis://redis:6379/0'))
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
 CELERY_ACCEPT_CONTENT = ['json']
@@ -155,7 +156,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR /'templates'],  # 👈 путь к шаблонам
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -168,7 +169,7 @@ TEMPLATES = [
     },
 ]
 
-# 14. Авто ID
+# 14. Auto Field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 15. Channels
@@ -178,5 +179,30 @@ CHANNEL_LAYERS = {
         "CONFIG": {
             "hosts": [os.getenv("REDIS_URL", "redis://redis:6379/0")],
         },
+    },
+}
+
+# 16. Security (Production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# 17. Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
 }
