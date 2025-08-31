@@ -7,9 +7,13 @@ from django.utils.translation import gettext_lazy as _
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Environment
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-if not SECRET_KEY:
-    raise ValueError("DJANGO_SECRET_KEY is not set in environment")
+# 2. Environment
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'unsafe-default-key')
+
+if SECRET_KEY == 'unsafe-default-key' and not DEBUG:
+    raise ValueError("DJANGO_SECRET_KEY must be set in production environment")
+
 
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
