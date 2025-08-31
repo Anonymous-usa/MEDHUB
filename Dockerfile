@@ -3,11 +3,11 @@
 # ---------------------------
 FROM python:3.10-slim-bookworm
 
-
-# Avoid Python buffering issues
+# ---------------------------
+# Environment settings
+# ---------------------------
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VIRTUALENVS_CREATE=false
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
@@ -24,8 +24,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------
-# Install Python dependencies first
-# to maximize Docker build cache usage
+# Install Python dependencies
 # ---------------------------
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
@@ -37,18 +36,17 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY . .
 
 # ---------------------------
-# Create static/media dirs with proper permissions
+# Prepare static/media directories
 # ---------------------------
 RUN mkdir -p /app/staticfiles /app/mediafiles \
     && chown -R root:root /app/staticfiles /app/mediafiles
 
 # ---------------------------
 # Collect static files
-# (ensure Django settings are ready for prod)
 # ---------------------------
 RUN python manage.py collectstatic --noinput
 
 # ---------------------------
-# Run Gunicorn by default
+# Start Gunicorn server
 # ---------------------------
 CMD ["gunicorn", "server.wsgi:application", "--bind", "0.0.0.0:8000"]

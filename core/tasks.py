@@ -1,4 +1,3 @@
-from celery import shared_task
 from django.core.mail import send_mail
 from django.conf import settings
 from .utils import normalize_phone_number
@@ -7,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+
 def send_sms_task(phone_number: str, message: str) -> bool:
     """
     Фоновая задача для отправки SMS.
@@ -19,7 +18,6 @@ def send_sms_task(phone_number: str, message: str) -> bool:
     return True
 
 
-@shared_task
 def send_email_task(subject: str, body: str, recipient_list: list) -> bool:
     """
     Отправка email через Django Email backend.
@@ -33,7 +31,6 @@ def send_email_task(subject: str, body: str, recipient_list: list) -> bool:
         return False
 
 
-@shared_task
 def send_push_task(user_id: int, title: str, message: str) -> None:
     """
     Фоновая задача для отправки push-уведомлений.
