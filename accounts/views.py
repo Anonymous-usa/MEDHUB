@@ -20,6 +20,8 @@ from .serializers import (
 )
 from .validators import validate_phone_number
 
+
+
 logger = logging.getLogger(__name__)
 
 # 🔧 Swagger helper serializers (renamed to avoid collisions)
@@ -64,8 +66,8 @@ class PatientRegistrationView(GenericAPIView):
             logger.exception("Ошибка при регистрации пациента")
             return Response(
                 {"detail": _("Внутренняя ошибка сервера.")},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 
 class LoginView(GenericAPIView):
