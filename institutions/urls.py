@@ -1,7 +1,7 @@
 # institutions/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import InstitutionViewSet
+from .views import InstitutionViewSet, InstitutionRegistrationView
 
 app_name = 'institutions'
 
@@ -11,4 +11,5 @@ router.register(r'institutions', InstitutionViewSet, basename='institution')
 urlpatterns = [
     # Версия API v1: все эндпоинты учреждений
     path('v1/', include(router.urls)),
+    path('register/', InstitutionRegistrationView.as_view(), name='institution-register'),
 ]
