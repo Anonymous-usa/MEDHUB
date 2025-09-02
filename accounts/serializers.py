@@ -3,6 +3,17 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User
 from .validators import validate_phone_number
 
+
+class AccountsErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+class AccountsSuccessSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+class AccountsLogoutRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
 class PatientRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)

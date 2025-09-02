@@ -1,47 +1,62 @@
-# institutions/views.py
-import logging
 from rest_framework import viewsets, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from .models import Institution
-from .serializers import (
-    InstitutionAdminSerializer,
-    InstitutionPublicSerializer
-)
+from .serializers import InstitutionAdminSerializer, InstitutionPublicSerializer
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 
+import logging
 logger = logging.getLogger(__name__)
 
-
+@extend_schema_view(
+    list=extend_schema(
+        responses={200: InstitutionPublicSerializer},
+        description="Публичный список учреждений"
+    ),
+    retrieve=extend_schema(
+        responses={200: InstitutionPublicSerializer},
+        description="Публичная информация об учреждении"
+    ),
+    create=extend_schema(
+        request=InstitutionAdminSerializer,
+        responses={201: InstitutionAdminSerializer},
+        description="Создание учреждения (только супер-админ)"
+    ),
+    update=extend_schema(
+        request=InstitutionAdminSerializer,
+        responses={200: InstitutionAdminSerializer},
+        description="Обновление учреждения (админ или супер-админ)"
+    ),
+    partial_update=extend_schema(
+        request=InstitutionAdminSerializer,
+        responses={200: InstitutionAdminSerializer},
+        description="Частичное обновление учреждения"
+    ),
+    destroy=extend_schema(
+        responses={204: None},
+        description="Удаление учреждения (только супер-админ)"
+    )
+)
 class InstitutionViewSet(viewsets.ModelViewSet):
-    """
-    create:              супер-админ
-    list/retrieve:       публично (AllowAny)
-    update/partial_update: админ своего учреждения или супер-админ
-    destroy:             только супер-админ
-    """
     queryset = Institution.objects.select_related(
         'city', 'city__region'
-    ).prefetch_related(
-        'departments'
-    )
+    ).prefetch_related('departments')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['institution_type', 'ownership_type', 'city', 'is_top', 'is_active']
     search_fields = ['name', 'address', 'city__name', 'city__region__name']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
-            perms = [AllowAny]
+            return [AllowAny()]
         elif self.action == 'create':
-            perms = [IsAuthenticated, IsSuperAdmin]
+            return [IsAuthenticated(), IsSuperAdmin()]
         elif self.action in ['update', 'partial_update']:
-            perms = [IsAuthenticated, IsInstitutionOwnerOrSuper]
+            return [IsAuthenticated(), IsInstitutionOwnerOrSuper()]
         elif self.action == 'destroy':
-            perms = [IsAuthenticated, IsSuperAdmin]
-        else:
-            perms = [IsAuthenticated]
-        return [p() for p in perms]
+            return [IsAuthenticated(), IsSuperAdmin()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action in ['list', 'retrieve']:

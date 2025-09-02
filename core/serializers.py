@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from .models import Region, City
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -14,8 +16,17 @@ class CitySerializer(serializers.ModelSerializer):
     """
     Сериализатор города с вложенным регионом.
     """
-    region_name = serializers.CharField(source='region.name', read_only=True)
-    region_slug = serializers.SlugField(source='region.slug', read_only=True)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_region_name(self):
+        return self.region.name
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_region_slug(self):
+        return self.region.slug
+
+    region_name = serializers.SerializerMethodField()
+    region_slug = serializers.SerializerMethodField()
 
     class Meta:
         model = City

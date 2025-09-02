@@ -1,5 +1,6 @@
-# notification/serializers.py
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from .models import Notification
 
 
@@ -8,6 +9,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     Сериализатор уведомлений.
     Показывает имя инициатора и строковое представление цели.
     """
+
     actor_name = serializers.CharField(
         source='actor.get_full_name',
         read_only=True
@@ -32,6 +34,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         )
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_target_repr(self, obj):
         """
         Возвращает читаемое представление связанного объекта.

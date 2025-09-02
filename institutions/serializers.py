@@ -1,6 +1,8 @@
-# institutions/serializers.py
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
+
 from .models import Institution, Department
 from core.serializers import CitySerializer
 
@@ -42,6 +44,13 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
     """
     Только для публичного списка и деталки.
     """
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_logo_url(self, obj):
+        request = self.context.get('request')
+        if obj.logo and request:
+            return request.build_absolute_uri(obj.logo.url)
+        return None
+
     logo_url = serializers.SerializerMethodField()
     departments = DepartmentSerializer(many=True, read_only=True)
     city = CitySerializer(read_only=True)
@@ -57,9 +66,3 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
             'latitude', 'longitude', 'logo_url',
             'is_top', 'departments'
         )
-
-    def get_logo_url(self, obj):
-        request = self.context.get('request')
-        if obj.logo and request:
-            return request.build_absolute_uri(obj.logo.url)
-        return None
