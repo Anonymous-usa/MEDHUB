@@ -85,3 +85,7 @@ def my_reviews_view(request):
 def my_requests_view(request):
     appointments = AppointmentRequest.objects.filter(doctor=request.user)
     return render(request, 'admim_custom/my_requests.html', {'appointments': appointments})
+
+
+
+

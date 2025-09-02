@@ -66,3 +66,14 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
             'latitude', 'longitude', 'logo_url',
             'is_top', 'departments'
         )
+
+
+
+class InstitutionRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Institution
+        fields = [
+            'name', 'slug', 'institution_type', 'ownership_type',
+            'region', 'city', 'address', 'phone', 'email',
+            'description', 'license_number', 'is_active', 'is_top'
+        ]

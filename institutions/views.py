@@ -74,3 +74,36 @@ class InstitutionViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         logger.warning(f"Учреждение удалено: {instance.name} ({instance.slug})")
         instance.delete()
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from drf_spectacular.utils import extend_schema
+from institutions.serializers import InstitutionRegistrationSerializer
+import logging
+
+logger = logging.getLogger(__name__)
+
+class IsSuperAdminOrSuperUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and (
+            request.user.is_authenticated and
+            (request.user.is_superuser or request.user.is_super_admin())
+        )
+
+class InstitutionRegistrationView(APIView):
+    permission_classes = [IsSuperAdminOrSuperUser]
+
+    @extend_schema(
+        request=InstitutionRegistrationSerializer,
+        responses={201: InstitutionRegistrationSerializer},
+        description="Регистрация нового медицинского учреждения"
+    )
+    def post(self, request):
+        serializer = InstitutionRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            institution = serializer.save()
+            logger.info(f"Institution registered: {institution.name}")
+            return Response(InstitutionRegistrationSerializer(institution).data, status=status.HTTP_201_CREATED)
+        logger.warning(f"Institution registration failed: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
