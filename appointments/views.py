@@ -3,25 +3,40 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from .models import AppointmentRequest
 from .serializers import (
     AppointmentRequestCreateSerializer,
     AppointmentRequestDetailSerializer,
-    AppointmentStatusUpdateSerializer
+    AppointmentStatusUpdateSerializer,
+    AppointmentSuccessSerializer,
+    AppointmentErrorSerializer
 )
 from .permissions import IsPatient, IsDoctor, IsOwnerOrDoctor
 
 logger = logging.getLogger(__name__)
 
 
-# Пациент: создать и просмотреть свои заявки
+@extend_schema_view(
+    get=extend_schema(
+        responses={200: AppointmentRequestDetailSerializer},
+        description="Список заявок пациента"
+    ),
+    post=extend_schema(
+        request=AppointmentRequestCreateSerializer,
+        responses={201: AppointmentSuccessSerializer, 400: AppointmentErrorSerializer},
+        description="Создание заявки на приём"
+    )
+)
 class PatientAppointmentListCreateView(generics.ListCreateAPIView):
     serializer_class = AppointmentRequestCreateSerializer
     permission_classes = [IsAuthenticated, IsPatient]
     throttle_classes = [AnonRateThrottle]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return AppointmentRequest.objects.none()
         return AppointmentRequest.objects.filter(
             patient=self.request.user,
             is_active=True
@@ -40,12 +55,17 @@ class PatientAppointmentListCreateView(generics.ListCreateAPIView):
         logger.info(f"Пациент {self.request.user.phone_number} создал заявку к врачу {instance.doctor.phone_number}")
 
 
-# Врач: список входящих заявок
+@extend_schema(
+    responses={200: AppointmentRequestDetailSerializer},
+    description="Список входящих заявок врача"
+)
 class DoctorAppointmentListView(generics.ListAPIView):
     serializer_class = AppointmentRequestDetailSerializer
     permission_classes = [IsAuthenticated, IsDoctor]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return AppointmentRequest.objects.none()
         return AppointmentRequest.objects.filter(
             doctor=self.request.user,
             is_active=True,
@@ -53,7 +73,11 @@ class DoctorAppointmentListView(generics.ListAPIView):
         ).order_by('-created_at')
 
 
-# Врач: принять или отклонить заявку
+@extend_schema(
+    request=AppointmentStatusUpdateSerializer,
+    responses={200: AppointmentRequestDetailSerializer, 400: AppointmentErrorSerializer},
+    description="Обновление статуса заявки"
+)
 class AppointmentStatusUpdateView(generics.UpdateAPIView):
     serializer_class = AppointmentStatusUpdateSerializer
     permission_classes = [IsAuthenticated, IsDoctor, IsOwnerOrDoctor]
@@ -65,7 +89,6 @@ class AppointmentStatusUpdateView(generics.UpdateAPIView):
         logger.info(f"Врач {self.request.user.phone_number} обновил заявку {instance.id} → статус: {instance.status}")
 
         if instance.status == AppointmentRequest.Status.ACCEPTED:
-            # Отклонить все другие заявки к этому врачу
             AppointmentRequest.objects.filter(
                 doctor=instance.doctor,
                 status=AppointmentRequest.Status.PENDING

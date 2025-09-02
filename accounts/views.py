@@ -1,12 +1,12 @@
 import logging
 from django.db import IntegrityError
 from django.contrib.auth import authenticate
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import GenericAPIView
 from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema
@@ -22,19 +22,29 @@ from .validators import validate_phone_number
 
 logger = logging.getLogger(__name__)
 
+# 🔧 Swagger helper serializers (renamed to avoid collisions)
+class AccountsErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField()
 
-class PatientRegistrationView(APIView):
+class AccountsSuccessSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+class AccountsLogoutRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
+class PatientRegistrationView(GenericAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [AnonRateThrottle]
     serializer_class = PatientRegistrationSerializer
 
     @extend_schema(
         request=PatientRegistrationSerializer,
-        responses={201: OpenApiTypes.OBJECT},
+        responses={201: AccountsSuccessSerializer, 400: AccountsErrorSerializer, 500: AccountsErrorSerializer},
         description="Регистрация нового пациента"
     )
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +68,7 @@ class PatientRegistrationView(APIView):
             )
 
 
-class LoginView(APIView):
+class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [AnonRateThrottle]
     throttle_scope = 'login'
@@ -66,11 +76,11 @@ class LoginView(APIView):
 
     @extend_schema(
         request=LoginSerializer,
-        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT, 403: OpenApiTypes.OBJECT},
+        responses={200: UserProfileSerializer, 400: AccountsErrorSerializer, 403: AccountsErrorSerializer},
         description="Аутентификация пользователя"
     )
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             logger.warning(f"Login failed: invalid input — {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -109,22 +119,22 @@ class LoginView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class UserProfileView(APIView):
+class UserProfileView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_scope = 'profile'
     serializer_class = UserProfileSerializer
 
     @extend_schema(
-        responses=UserProfileSerializer,
+        responses={200: UserProfileSerializer},
         description="Получение профиля текущего пользователя"
     )
     def get(self, request):
-        serializer = self.serializer_class(request.user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
     @extend_schema(
         request=UserProfileSerializer,
-        responses=UserProfileSerializer,
+        responses={200: UserProfileSerializer, 400: AccountsErrorSerializer, 403: AccountsErrorSerializer},
         description="Обновление профиля пациента"
     )
     def put(self, request):
@@ -135,7 +145,7 @@ class UserProfileView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer = self.serializer_class(request.user, data=request.data, partial=True)
+        serializer = self.get_serializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             logger.info(f"Профиль обновлён: {request.user.phone_number}")
@@ -145,12 +155,13 @@ class UserProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LogoutView(APIView):
+class LogoutView(GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = AccountsLogoutRequestSerializer
 
     @extend_schema(
-        request=OpenApiTypes.OBJECT,
-        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+        request=AccountsLogoutRequestSerializer,
+        responses={200: AccountsSuccessSerializer, 400: AccountsErrorSerializer},
         description="Выход из системы"
     )
     def post(self, request):

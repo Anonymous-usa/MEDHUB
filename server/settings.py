@@ -7,16 +7,12 @@ from django.utils.translation import gettext_lazy as _
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Environment
-# 2. Environment
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'unsafe-default-key')
-
 if SECRET_KEY == 'unsafe-default-key' and not DEBUG:
     raise ValueError("DJANGO_SECRET_KEY must be set in production environment")
 
-
-DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if h.strip()]
 
 # 3. Installed apps
 INSTALLED_APPS = [
@@ -34,15 +30,15 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'channels',
 
-    'admim_custom',
-    'core',
-    'accounts',
-    'institutions',
-    'appointments',
-    'reviews',
-    'statistics',
-    'notifications',
-    'message',
+    'admim_custom.apps.AdmimCustomConfig',
+    'core.apps.CoreConfig',
+    'accounts.apps.AccountsConfig',
+    'institutions.apps.InstitutionsConfig',
+    'appointments.apps.AppointmentsConfig',
+    'reviews.apps.ReviewsConfig',
+    'statistics.apps.StatisticsConfig',
+    'notifications.apps.NotificationsConfig',
+    'message.apps.MessegeConfig',
 ]
 
 # 4. Middleware
@@ -134,6 +130,7 @@ REST_FRAMEWORK = {
         'anon': '10/min',
         'user': '1000/day',
         'login': '5/min',
+        'profile': '10/min',
     },
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -148,18 +145,19 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'MEDHUB.TJ API',
     'DESCRIPTION': 'Централизованная медицинская платформа для Таджикистана',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
     },
 }
 
-
-# 13. Templates
+# 12. Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -176,10 +174,10 @@ TEMPLATES = [
     },
 ]
 
-# 14. Auto Field
+# 13. Auto Field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# 15. Channels
+# 14. Channels
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -189,7 +187,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-# 16. Security (Production)
+# 15. Security (Production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -200,8 +198,9 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
-# 17. Logging
+# 16. Logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -213,3 +212,6 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+# 17. Testing
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'

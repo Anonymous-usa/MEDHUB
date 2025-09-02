@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from .models import Message
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -7,8 +9,17 @@ class MessageSerializer(serializers.ModelSerializer):
     Сериализатор для отправки и получения сообщений.
     Отправитель определяется автоматически из request.user.
     """
-    sender_name = serializers.CharField(source='sender.get_full_name', read_only=True)
-    receiver_name = serializers.CharField(source='receiver.get_full_name', read_only=True)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_sender_name(self, obj):
+        return obj.sender.get_full_name()
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_receiver_name(self, obj):
+        return obj.receiver.get_full_name()
+
+    sender_name = serializers.SerializerMethodField()
+    receiver_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Message

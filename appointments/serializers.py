@@ -1,6 +1,14 @@
 from rest_framework import serializers
-from .models import AppointmentRequest
 from django.utils.translation import gettext_lazy as _
+from .models import AppointmentRequest
+
+# 🔧 Swagger helper serializers (renamed to avoid collisions)
+class AppointmentSuccessSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+class AppointmentErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
 
 class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,14 +41,15 @@ class AppointmentRequestDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppointmentRequest
-        fields = ('id', 'patient_phone', 'doctor_phone', 'note',
-                  'status', 'created_at', 'updated_at')
+        fields = (
+            'id', 'patient_phone', 'doctor_phone', 'note',
+            'status', 'created_at', 'updated_at'
+        )
         read_only_fields = ('status', 'created_at', 'updated_at')
 
+
 class AppointmentStatusUpdateSerializer(serializers.ModelSerializer):
-    status = serializers.ChoiceField(
-        choices=AppointmentRequest.Status.choices
-    )
+    status = serializers.ChoiceField(choices=AppointmentRequest.Status.choices)
 
     class Meta:
         model = AppointmentRequest
@@ -55,12 +64,11 @@ class AppointmentStatusUpdateSerializer(serializers.ModelSerializer):
         new_status = validated_data['status']
         instance.status = new_status
         instance.save()
-    
+
         if new_status == AppointmentRequest.Status.ACCEPTED:
             AppointmentRequest.objects.filter(
                 doctor=instance.doctor,
                 status=AppointmentRequest.Status.PENDING
             ).exclude(id=instance.id).update(status=AppointmentRequest.Status.REJECTED)
-    
-        return instance
 
+        return instance

@@ -1,0 +1,1800 @@
+openapi: 3.0.3
+info:
+  title: MEDHUB.TJ API
+  version: 1.0.0
+  description: Централизованная медицинская платформа для Таджикистана
+paths:
+  /api/v1/chat/{user_id}/:
+    get:
+      operationId: v1_chat_list
+      description: Получение сообщений между текущим пользователем и другим
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+          description: ''
+    post:
+      operationId: v1_chat_create
+      description: Отправка сообщения другому пользователю
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/dialogs/:
+    get:
+      operationId: v1_dialogs_list
+      description: Список последних сообщений по каждому диалогу
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+          description: ''
+  /api/v1/doctor/appointments/:
+    get:
+      operationId: v1_doctor_appointments_list
+      description: Список входящих заявок врача
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+  /api/v1/doctor/appointments/{id}/status/:
+    put:
+      operationId: v1_doctor_appointments_status_update
+      description: Обновление статуса заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+    patch:
+      operationId: v1_doctor_appointments_status_partial_update
+      description: Обновление статуса заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+  /api/v1/doctors/{doctor_id}/reviews/:
+    get:
+      operationId: v1_doctors_reviews_list
+      description: Список отзывов для конкретного врача
+      parameters:
+      - in: path
+        name: doctor_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewDetail'
+          description: ''
+  /api/v1/institutions/:
+    get:
+      operationId: v1_institutions_list
+      description: Публичный список учреждений
+      parameters:
+      - in: query
+        name: city
+        schema:
+          type: integer
+      - in: query
+        name: institution_type
+        schema:
+          type: string
+          title: Тип учреждения
+          enum:
+          - clinic
+          - hospital
+          - laboratory
+          - other
+        description: |-
+          * `hospital` - Больница
+          * `clinic` - Клиника
+          * `laboratory` - Лаборатория
+          * `other` - Другое
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_top
+        schema:
+          type: boolean
+      - in: query
+        name: ownership_type
+        schema:
+          type: string
+          title: Форма собственности
+          enum:
+          - private
+          - state
+        description: |-
+          * `state` - Государственное
+          * `private` - Частное
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstitutionPublic'
+          description: ''
+    post:
+      operationId: v1_institutions_create
+      description: Создание учреждения (только супер-админ)
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAdmin'
+          description: ''
+  /api/v1/institutions/{id}/:
+    get:
+      operationId: v1_institutions_retrieve
+      description: Публичная информация об учреждении
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Учреждение.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionPublic'
+          description: ''
+    put:
+      operationId: v1_institutions_update
+      description: Обновление учреждения (админ или супер-админ)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Учреждение.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstitutionAdminRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAdmin'
+          description: ''
+    patch:
+      operationId: v1_institutions_partial_update
+      description: Частичное обновление учреждения
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Учреждение.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionAdminRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionAdminRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionAdminRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionAdmin'
+          description: ''
+    delete:
+      operationId: v1_institutions_destroy
+      description: Удаление учреждения (только супер-админ)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Учреждение.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/login/:
+    post:
+      operationId: v1_login_create
+      description: Аутентификация пользователя
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/logout/:
+    post:
+      operationId: v1_logout_create
+      description: Выход из системы
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/messages/{id}/read/:
+    patch:
+      operationId: v1_messages_read_partial_update
+      description: Пометить сообщение как прочитанное
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: v1_notifications_list
+      description: Список уведомлений текущего пользователя
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/{id}/read/:
+    put:
+      operationId: v1_notifications_read_update
+      description: Пометить одно уведомление прочитанным
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+    patch:
+      operationId: v1_notifications_read_partial_update
+      description: Пометить одно уведомление прочитанным
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/read-all/:
+    post:
+      operationId: v1_notifications_read_all_create
+      description: Пометить все уведомления текущего пользователя прочитанными
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkedCount'
+          description: ''
+  /api/v1/patient/appointments/:
+    get:
+      operationId: v1_patient_appointments_list
+      description: Список заявок пациента
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+    post:
+      operationId: v1_patient_appointments_create
+      description: Создание заявки на приём
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+  /api/v1/patient/reviews/:
+    get:
+      operationId: v1_patient_reviews_list
+      description: Список отзывов текущего пациента
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewDetail'
+          description: ''
+    post:
+      operationId: v1_patient_reviews_create
+      description: Создание нового отзыва по принятой заявке
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDetail'
+          description: ''
+  /api/v1/profile/:
+    get:
+      operationId: v1_profile_retrieve
+      description: Получение профиля текущего пользователя
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: v1_profile_update
+      description: Обновление профиля пациента
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/regions/:
+    get:
+      operationId: v1_regions_list
+      description: Публичный список активных регионов Таджикистана
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Region'
+          description: ''
+  /api/v1/regions/{region_slug}/cities/:
+    get:
+      operationId: v1_regions_cities_list
+      description: Список активных городов в выбранном регионе
+      parameters:
+      - in: path
+        name: region_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+          description: ''
+  /api/v1/register/patient/:
+    post:
+      operationId: v1_register_patient_create
+      description: Регистрация нового пациента
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatientRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatientRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/stats/institution/{id}/:
+    get:
+      operationId: v1_stats_institution_retrieve
+      description: Статистика по конкретному учреждению (для супер-админа и админа
+        учреждения)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionStats'
+          description: ''
+  /api/v1/stats/overview/:
+    get:
+      operationId: v1_stats_overview_retrieve
+      description: Общая статистика по системе (только для супер-админа)
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewStats'
+          description: ''
+  /api/v1/token/refresh/:
+    post:
+      operationId: v1_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+components:
+  schemas:
+    AppointmentRequestCreateRequest:
+      type: object
+      properties:
+        doctor:
+          type: integer
+        note:
+          type: string
+          title: Комментарий пациента
+      required:
+      - doctor
+    AppointmentRequestDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        patient_phone:
+          type: string
+          readOnly: true
+        doctor_phone:
+          type: string
+          readOnly: true
+        note:
+          type: string
+          title: Комментарий пациента
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+          title: Статус заявки
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Создана
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Обновлена
+      required:
+      - created_at
+      - doctor_phone
+      - id
+      - patient_phone
+      - status
+      - updated_at
+    AppointmentStatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+      required:
+      - status
+    City:
+      type: object
+      description: Сериализатор города с вложенным регионом.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Город
+          maxLength: 100
+        slug:
+          type: string
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        region:
+          type: integer
+          title: Регион
+        region_name:
+          type: string
+          readOnly: true
+        region_slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - region
+      - region_name
+      - region_slug
+      - slug
+    Department:
+      type: object
+      description: Сериализатор отделения учреждения.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Отделение
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+      required:
+      - id
+      - name
+    DepartmentRequest:
+      type: object
+      description: Сериализатор отделения учреждения.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Отделение
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+      required:
+      - name
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    InstitutionAdmin:
+      type: object
+      description: |-
+        Для операций super_admin и institution_admin.
+        Полный набор данных + отделения (read-only).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+        slug:
+          type: string
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Описание
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Тип учреждения
+        ownership_type:
+          allOf:
+          - $ref: '#/components/schemas/OwnershipTypeEnum'
+          title: Форма собственности
+        city:
+          type: integer
+          nullable: true
+          title: Город
+        city_name:
+          type: string
+          readOnly: true
+        region_name:
+          type: string
+          readOnly: true
+        address:
+          type: string
+          title: Адрес
+          maxLength: 255
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Широта
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Долгота
+        logo:
+          type: string
+          format: uri
+          nullable: true
+          title: Логотип
+        is_top:
+          type: boolean
+          title: ТОП учреждение
+        is_active:
+          type: boolean
+          title: Активно
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+      required:
+      - address
+      - city_name
+      - created_at
+      - departments
+      - id
+      - institution_type
+      - name
+      - ownership_type
+      - phone
+      - region_name
+      - slug
+      - updated_at
+    InstitutionAdminRequest:
+      type: object
+      description: |-
+        Для операций super_admin и institution_admin.
+        Полный набор данных + отделения (read-only).
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 255
+        slug:
+          type: string
+          minLength: 1
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Описание
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Тип учреждения
+        ownership_type:
+          allOf:
+          - $ref: '#/components/schemas/OwnershipTypeEnum'
+          title: Форма собственности
+        city:
+          type: integer
+          nullable: true
+          title: Город
+        address:
+          type: string
+          minLength: 1
+          title: Адрес
+          maxLength: 255
+        phone:
+          type: string
+          minLength: 1
+          title: Телефон
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Широта
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Долгота
+        logo:
+          type: string
+          format: binary
+          nullable: true
+          title: Логотип
+        is_top:
+          type: boolean
+          title: ТОП учреждение
+        is_active:
+          type: boolean
+          title: Активно
+      required:
+      - address
+      - institution_type
+      - name
+      - ownership_type
+      - phone
+      - slug
+    InstitutionPublic:
+      type: object
+      description: Только для публичного списка и деталки.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+        slug:
+          type: string
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Описание
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Тип учреждения
+        ownership_type:
+          allOf:
+          - $ref: '#/components/schemas/OwnershipTypeEnum'
+          title: Форма собственности
+        city:
+          allOf:
+          - $ref: '#/components/schemas/City'
+          readOnly: true
+        region_name:
+          type: string
+          readOnly: true
+        address:
+          type: string
+          title: Адрес
+          maxLength: 255
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Широта
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Долгота
+        logo_url:
+          type: string
+          readOnly: true
+        is_top:
+          type: boolean
+          title: ТОП учреждение
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+          readOnly: true
+      required:
+      - address
+      - city
+      - departments
+      - id
+      - institution_type
+      - logo_url
+      - name
+      - ownership_type
+      - phone
+      - region_name
+      - slug
+    InstitutionStats:
+      type: object
+      description: Показатели по конкретному учреждению.
+      properties:
+        institution_id:
+          type: integer
+          title: ID учреждения
+        name:
+          type: string
+          title: Название учреждения
+        total_doctors:
+          type: integer
+          title: Всего врачей
+        total_requests:
+          type: integer
+          title: Всего заявок
+        accepted_requests:
+          type: integer
+          title: Принятые заявки
+        rejected_requests:
+          type: integer
+          title: Отклонённые заявки
+      required:
+      - accepted_requests
+      - institution_id
+      - name
+      - rejected_requests
+      - total_doctors
+      - total_requests
+    InstitutionTypeEnum:
+      enum:
+      - hospital
+      - clinic
+      - laboratory
+      - other
+      type: string
+      description: |-
+        * `hospital` - Больница
+        * `clinic` - Клиника
+        * `laboratory` - Лаборатория
+        * `other` - Другое
+    LoginRequest:
+      type: object
+      properties:
+        phone_number:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - phone_number
+    LogoutRequestRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    MarkedCount:
+      type: object
+      properties:
+        marked_count:
+          type: integer
+      required:
+      - marked_count
+    Message:
+      type: object
+      description: |-
+        Сериализатор для отправки и получения сообщений.
+        Отправитель определяется автоматически из request.user.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sender:
+          type: integer
+          readOnly: true
+          title: Отправитель
+        sender_name:
+          type: string
+          readOnly: true
+        receiver:
+          type: integer
+          title: Получатель
+        receiver_name:
+          type: string
+          readOnly: true
+        content:
+          type: string
+          title: Текст сообщения
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+        is_read:
+          type: boolean
+          title: Прочитано
+      required:
+      - content
+      - created_at
+      - id
+      - receiver
+      - receiver_name
+      - sender
+      - sender_name
+      - updated_at
+    MessageRequest:
+      type: object
+      description: |-
+        Сериализатор для отправки и получения сообщений.
+        Отправитель определяется автоматически из request.user.
+      properties:
+        receiver:
+          type: integer
+          title: Получатель
+        content:
+          type: string
+          minLength: 1
+          title: Текст сообщения
+        is_read:
+          type: boolean
+          title: Прочитано
+      required:
+      - content
+      - receiver
+    Notification:
+      type: object
+      description: |-
+        Сериализатор уведомлений.
+        Показывает имя инициатора и строковое представление цели.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        verb:
+          type: string
+          readOnly: true
+          title: Действие
+        actor_id:
+          type: integer
+          readOnly: true
+        actor_name:
+          type: string
+          readOnly: true
+        target_repr:
+          type: string
+          readOnly: true
+        is_read:
+          type: boolean
+          title: Прочитано
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+      required:
+      - actor_id
+      - actor_name
+      - created_at
+      - id
+      - target_repr
+      - updated_at
+      - verb
+    OverviewStats:
+      type: object
+      description: Обзорные показатели по всей системе.
+      properties:
+        total_institutions:
+          type: integer
+          title: Всего учреждений
+        total_hospitals:
+          type: integer
+          title: Всего больниц
+        total_clinics:
+          type: integer
+          title: Всего клиник
+        total_doctors:
+          type: integer
+          title: Всего врачей
+        total_patients:
+          type: integer
+          title: Всего пациентов
+        total_requests:
+          type: integer
+          title: Всего заявок
+        accepted_requests:
+          type: integer
+          title: Принятые заявки
+        rejected_requests:
+          type: integer
+          title: Отклонённые заявки
+      required:
+      - accepted_requests
+      - rejected_requests
+      - total_clinics
+      - total_doctors
+      - total_hospitals
+      - total_institutions
+      - total_patients
+      - total_requests
+    OwnershipTypeEnum:
+      enum:
+      - state
+      - private
+      type: string
+      description: |-
+        * `state` - Государственное
+        * `private` - Частное
+    PatchedAppointmentStatusUpdateRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+    PatchedInstitutionAdminRequest:
+      type: object
+      description: |-
+        Для операций super_admin и institution_admin.
+        Полный набор данных + отделения (read-only).
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 255
+        slug:
+          type: string
+          minLength: 1
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Описание
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Тип учреждения
+        ownership_type:
+          allOf:
+          - $ref: '#/components/schemas/OwnershipTypeEnum'
+          title: Форма собственности
+        city:
+          type: integer
+          nullable: true
+          title: Город
+        address:
+          type: string
+          minLength: 1
+          title: Адрес
+          maxLength: 255
+        phone:
+          type: string
+          minLength: 1
+          title: Телефон
+          maxLength: 20
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Широта
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+          title: Долгота
+        logo:
+          type: string
+          format: binary
+          nullable: true
+          title: Логотип
+        is_top:
+          type: boolean
+          title: ТОП учреждение
+        is_active:
+          type: boolean
+          title: Активно
+    PatientRegistrationRequest:
+      type: object
+      properties:
+        phone_number:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Адрес электронной почты
+          maxLength: 254
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          title: Дата рождения
+      required:
+      - email
+      - password
+      - password_confirm
+      - phone_number
+    RatingEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `1` - 1
+        * `2` - 2
+        * `3` - 3
+        * `4` - 4
+        * `5` - 5
+    Region:
+      type: object
+      description: Сериализатор региона с базовыми полями.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Регион
+          maxLength: 100
+        slug:
+          type: string
+          title: Псевдоним
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+      - slug
+    ReviewCreateRequest:
+      type: object
+      description: |-
+        Создание нового отзыва.
+        Доступно только по принятой заявке текущего пользователя‑пациента.
+      properties:
+        appointment:
+          type: integer
+          description: ID принятой заявки на приём
+        rating:
+          allOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          title: Оценка
+          minimum: 0
+          maximum: 32767
+        comment:
+          type: string
+          title: Комментарий
+      required:
+      - appointment
+      - rating
+    ReviewDetail:
+      type: object
+      description: |-
+        Детальный просмотр отзыва.
+        Добавляет телефоны пациента и врача для админ‑панели/подробного экрана.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        appointment:
+          type: integer
+          title: Заявка
+        patient_name:
+          type: string
+          readOnly: true
+        patient_phone:
+          type: string
+          readOnly: true
+        doctor_name:
+          type: string
+          readOnly: true
+        doctor_phone:
+          type: string
+          readOnly: true
+        rating:
+          allOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          title: Оценка
+          minimum: 0
+          maximum: 32767
+        comment:
+          type: string
+          title: Комментарий
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата обновления
+      required:
+      - appointment
+      - created_at
+      - doctor_name
+      - doctor_phone
+      - id
+      - patient_name
+      - patient_phone
+      - rating
+      - updated_at
+    Status:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    StatusEnum:
+      enum:
+      - pending
+      - accepted
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Ожидает
+        * `accepted` - Принята
+        * `rejected` - Отклонена
+    Success:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserProfile:
+      type: object
+      properties:
+        phone_number:
+          type: string
+          readOnly: true
+          title: Номер телефона
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          title: Дата рождения
+        user_type:
+          allOf:
+          - $ref: '#/components/schemas/UserTypeEnum'
+          readOnly: true
+        institution_name:
+          type: string
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+          title: Верифицирован
+      required:
+      - email
+      - institution_name
+      - is_verified
+      - phone_number
+      - user_type
+    UserProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Адрес электронной почты
+          maxLength: 254
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          title: Дата рождения
+      required:
+      - email
+    UserTypeEnum:
+      enum:
+      - patient
+      - doctor
+      - institution_admin
+      - super_admin
+      type: string
+      description: |-
+        * `patient` - Пациент
+        * `doctor` - Врач
+        * `institution_admin` - Администратор учреждения
+        * `super_admin` - Супер администратор
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

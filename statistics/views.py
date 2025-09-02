@@ -1,12 +1,12 @@
-# statistics/views.py
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
-from .serializers import OverviewStatsSerializer, InstitutionStatsSerializer
+from .serializers import SystemOverviewStatsSerializer, InstitutionSpecificStatsSerializer
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 from institutions.models import Institution
 
@@ -14,11 +14,11 @@ User = apps.get_model(*settings.AUTH_USER_MODEL.split('.')) if isinstance(settin
 Appointment = apps.get_model('appointments', 'AppointmentRequest')
 
 
+@extend_schema(
+    responses={200: SystemOverviewStatsSerializer},
+    description="Общая статистика по системе (только для супер-админа)"
+)
 class OverviewStatsView(APIView):
-    """
-    GET /api/v1/stats/overview/
-    Только для супер-админа: общая статистика по системе.
-    """
     permission_classes = [IsSuperAdmin]
 
     def get(self, request):
@@ -32,20 +32,28 @@ class OverviewStatsView(APIView):
             'accepted_requests': Appointment.objects.filter(status=Appointment.Status.ACCEPTED).count(),
             'rejected_requests': Appointment.objects.filter(status=Appointment.Status.REJECTED).count(),
         }
-        serializer = OverviewStatsSerializer(data)
+        serializer = SystemOverviewStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="pk",
+            location=OpenApiParameter.PATH,
+            required=True,
+            type=int,
+            description="ID учреждения"
+        )
+    ],
+    responses={200: InstitutionSpecificStatsSerializer},
+    description="Статистика по конкретному учреждению (для супер-админа и админа учреждения)"
+)
 class InstitutionStatsView(APIView):
-    """
-    GET /api/v1/stats/institution/<int:pk>/
-    Для супер-админа и админа своего учреждения.
-    """
     permission_classes = [IsInstitutionOwnerOrSuper]
 
-    def get(self, request, pk):
+    def get(self, request, pk: int):
         institution = get_object_or_404(Institution, pk=pk)
-
         qs = Appointment.objects.filter(doctor__institution_id=institution.id)
 
         data = {
@@ -56,5 +64,5 @@ class InstitutionStatsView(APIView):
             'accepted_requests': qs.filter(status=Appointment.Status.ACCEPTED).count(),
             'rejected_requests': qs.filter(status=Appointment.Status.REJECTED).count(),
         }
-        serializer = InstitutionStatsSerializer(data)
+        serializer = InstitutionSpecificStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)

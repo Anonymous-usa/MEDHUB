@@ -1,21 +1,31 @@
-# notification/views.py
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 from .models import Notification
 from .serializers import NotificationSerializer
 from .permissions import IsRecipient
 
+# 🔧 Swagger helper serializers (renamed to avoid collisions)
+class NotificationMarkedCountSerializer(serializers.Serializer):
+    marked_count = serializers.IntegerField()
 
+class NotificationErrorSerializer(serializers.Serializer):
+    error = serializers.CharField()
+
+
+@extend_schema(
+    responses={200: NotificationSerializer},
+    description="Список уведомлений текущего пользователя"
+)
 class NotificationListView(generics.ListAPIView):
-    """
-    Список уведомлений текущего пользователя.
-    """
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Notification.objects.none()
         return (
             Notification.objects
             .select_related('actor', 'recipient')
@@ -24,10 +34,12 @@ class NotificationListView(generics.ListAPIView):
         )
 
 
+@extend_schema(
+    request=None,
+    responses={200: NotificationSerializer, 403: NotificationErrorSerializer, 404: NotificationErrorSerializer},
+    description="Пометить одно уведомление прочитанным"
+)
 class NotificationMarkReadView(generics.UpdateAPIView):
-    """
-    Пометить одно уведомление прочитанным.
-    """
     serializer_class = NotificationSerializer
     permission_classes = [IsRecipient]
     queryset = Notification.objects.all()
@@ -43,10 +55,12 @@ class NotificationMarkReadView(generics.UpdateAPIView):
         )
 
 
+@extend_schema(
+    request=None,
+    responses={200: NotificationMarkedCountSerializer},
+    description="Пометить все уведомления текущего пользователя прочитанными"
+)
 class NotificationMarkAllReadView(generics.GenericAPIView):
-    """
-    Пометить все уведомления текущего пользователя прочитанными.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
