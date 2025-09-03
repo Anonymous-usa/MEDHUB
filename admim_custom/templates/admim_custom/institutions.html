@@ -6,6 +6,17 @@
 <div class="container mt-4">
   <h2 class="mb-4">🏥 Все учреждения</h2>
 
+{% if request.user.is_superuser or request.user.is_super_admin %}
+  <div class="mb-3 d-flex gap-2 flex-wrap">
+    <a href="{% url 'institutions:institution-register' %}" class="btn btn-success">
+      ➕ Добавить учреждение
+    </a>
+    <a href="{% url 'institutions:department-create' %}" class="btn btn-outline-primary">
+      🏬 Добавить отделение
+    </a>
+  </div>
+{% endif %}
+
   <!-- Фильтр по региону -->
   <details class="mb-4" open>
     <summary class="summary-toggle h5 mb-2">🔍 Фильтр по региону</summary>
@@ -29,6 +40,9 @@
           <th>Тип</th>
           <th>Регион</th>
           <th>Статус</th>
+          {% if request.user.is_superuser or request.user.is_super_admin %}
+            <th>Действия</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -46,10 +60,20 @@
               {% endif %}
             </span>
           </td>
+          {% if request.user.is_superuser or request.user.is_super_admin %}
+          <td>
+            <a href="{% url 'institutions:institution-edit' institution.id %}" class="btn btn-sm btn-warning me-1">
+              ✏️
+            </a>
+            <a href="{% url 'institutions:institution-delete' institution.id %}" class="btn btn-sm btn-danger">
+              🗑️
+            </a>
+          </td>
+          {% endif %}
         </tr>
         {% empty %}
         <tr>
-          <td colspan="4" class="text-center text-muted">Нет учреждений по заданному фильтру.</td>
+          <td colspan="5" class="text-center text-muted">Нет учреждений по заданному фильтру.</td>
         </tr>
         {% endfor %}
       </tbody>
