@@ -1,13 +1,14 @@
-from rest_framework import viewsets, filters
-from rest_framework.permissions import AllowAny, IsAuthenticated
+import logging
+from rest_framework import viewsets, filters, status, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from .models import Institution
-from .serializers import InstitutionAdminSerializer, InstitutionPublicSerializer
+from .serializers import InstitutionAdminSerializer, InstitutionPublicSerializer, InstitutionRegistrationSerializer
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 
-import logging
 logger = logging.getLogger(__name__)
 
 @extend_schema_view(
@@ -40,9 +41,7 @@ logger = logging.getLogger(__name__)
     )
 )
 class InstitutionViewSet(viewsets.ModelViewSet):
-    queryset = Institution.objects.select_related(
-        'city', 'city__region'
-    ).prefetch_related('departments')
+    queryset = Institution.objects.select_related('city', 'city__region').prefetch_related('departments')
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['institution_type', 'ownership_type', 'city', 'is_top', 'is_active']
     search_fields = ['name', 'address', 'city__name', 'city__region__name']
@@ -75,14 +74,6 @@ class InstitutionViewSet(viewsets.ModelViewSet):
         logger.warning(f"Учреждение удалено: {instance.name} ({instance.slug})")
         instance.delete()
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, permissions
-from drf_spectacular.utils import extend_schema
-from institutions.serializers import InstitutionRegistrationSerializer
-import logging
-
-logger = logging.getLogger(__name__)
 
 class IsSuperAdminOrSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -91,19 +82,69 @@ class IsSuperAdminOrSuperUser(permissions.BasePermission):
             (request.user.is_superuser or request.user.is_super_admin())
         )
 
+
+@extend_schema(
+    request=InstitutionRegistrationSerializer,
+    responses={201: InstitutionRegistrationSerializer},
+    description="Регистрация нового медицинского учреждения"
+)
 class InstitutionRegistrationView(APIView):
     permission_classes = [IsSuperAdminOrSuperUser]
 
-    @extend_schema(
-        request=InstitutionRegistrationSerializer,
-        responses={201: InstitutionRegistrationSerializer},
-        description="Регистрация нового медицинского учреждения"
-    )
     def post(self, request):
         serializer = InstitutionRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             institution = serializer.save()
             logger.info(f"Institution registered: {institution.name}")
-            return Response(InstitutionRegistrationSerializer(institution).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         logger.warning(f"Institution registration failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+from django.views.generic.edit import CreateView
+from django.contrib.auth.mixins import UserPassesTestMixin
+from .models import Institution
+from .forms import InstitutionForm  
+
+class InstitutionFormView(UserPassesTestMixin, CreateView):
+    model = Institution
+    form_class = InstitutionForm
+    template_name = 'admim_custom/institutionregister.html'
+    success_url = '/dashboard/'
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+from django.views.generic.edit import UpdateView, DeleteView
+from django.urls import reverse_lazy
+
+class InstitutionEditView(UserPassesTestMixin, UpdateView):
+    model = Institution
+    form_class = InstitutionForm
+    template_name = 'admim_custom/institution_edit.html'
+    success_url = reverse_lazy('admim_custom:institutions')  
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+    
+
+
+class InstitutionDeleteView(UserPassesTestMixin, DeleteView):
+    model = Institution
+    template_name = 'admim_custom/institution_delete.html'
+    success_url = reverse_lazy('admim_custom:institutions')
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+from django.views.generic.edit import CreateView
+from .models import Department
+from .forms import DepartmentForm
+
+class DepartmentCreateView(UserPassesTestMixin, CreateView):
+    model = Department
+    form_class = DepartmentForm
+    template_name = 'admim_custom/department_create.html'
+    success_url = '/institutions/'  # или куда тебе нужно
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()

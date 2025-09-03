@@ -89,3 +89,35 @@ def my_requests_view(request):
 
 
 
+from django.views.generic import ListView, UpdateView, DeleteView
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class DepartmentListView(UserPassesTestMixin, ListView):
+    model = Department
+    template_name = 'admim_custom/departments.html'
+    context_object_name = 'departments'
+    paginate_by = 20  # если нужно
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+from institutions.forms import DepartmentForm
+from django.urls import reverse_lazy
+
+
+class DepartmentEditView(UserPassesTestMixin, UpdateView):
+    model = Department
+    form_class = DepartmentForm
+    template_name = 'admim_custom/department_edit.html'
+    success_url = reverse_lazy('admim_custom:departments')
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+    
+class DepartmentDeleteView(UserPassesTestMixin, DeleteView):
+    model = Department
+    template_name = 'admim_custom/department_delete.html'
+    success_url = reverse_lazy('admim_custom:departments')
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
