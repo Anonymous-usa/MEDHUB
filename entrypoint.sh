@@ -12,11 +12,13 @@ DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-adminpass}
 python manage.py shell << END
 from django.contrib.auth import get_user_model
 User = get_user_model()
-if not User.objects.filter(phone='${DJANGO_SUPERUSER_PHONE}').exists():
+if not User.objects.filter(phone_number='${DJANGO_SUPERUSER_PHONE}').exists():
     User.objects.create_superuser(
-        phone='${DJANGO_SUPERUSER_PHONE}',
+        phone_number='${DJANGO_SUPERUSER_PHONE}',
+        email='admin@medhub.tj',
         password='${DJANGO_SUPERUSER_PASSWORD}'
     )
+
 END
 
 echo "📦 Collecting static files..."

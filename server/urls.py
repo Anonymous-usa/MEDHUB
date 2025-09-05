@@ -39,6 +39,6 @@ urlpatterns = [
     path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     
     # HTML-интерфейс учреждений
-    path("institutions/", include("institutions.urls", namespace="institutions")),
+    path("institutions/", include("institutions.urls", namespace="institutions_admin")),
 
 ]
