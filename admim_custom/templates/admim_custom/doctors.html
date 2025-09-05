@@ -1,13 +1,16 @@
 {% extends "base.html" %}
-
 {% block title %}🧑‍⚕️ Все врачи — MEDHUB.TJ{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
   <h2 class="mb-4">🧑‍⚕️ Все врачи</h2>
-  <a href="" class="btn btn-outline-secondary">
-      🧑‍⚕️ Добавить врача
-    </a>
+
+  {% if request.user.is_superuser or request.user.is_super_admin %}
+  <a href="{% url 'admim_custom:doctor-create' %}" class="btn btn-outline-secondary mb-3">
+    🧑‍⚕️ Добавить врача
+  </a>
+  {% endif %}
+
   <!-- Фильтр по учреждению -->
   <details class="mb-4" open>
     <summary class="summary-toggle h5 mb-2">🔍 Фильтр по учреждению</summary>
@@ -33,6 +36,9 @@
             <th>Телефон</th>
             <th>Учреждение</th>
             <th>Статус</th>
+            {% if request.user.is_superuser or request.user.is_super_admin %}
+            <th>Действия</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -42,10 +48,16 @@
             <td>{{ doctor.phone_number }}</td>
             <td>{{ doctor.institution.name }}</td>
             <td>{{ doctor.is_verified|yesno:"✅,❌" }}</td>
+            {% if request.user.is_superuser or request.user.is_super_admin %}
+            <td>
+              <a href="{% url 'admim_custom:doctor-edit' doctor.id %}" class="btn btn-sm btn-outline-warning me-1">✏️</a>
+              <a href="{% url 'admim_custom:doctor-delete' doctor.id %}" class="btn btn-sm btn-outline-danger">🗑️</a>
+            </td>
+            {% endif %}
           </tr>
           {% empty %}
           <tr>
-            <td colspan="4" class="text-center text-muted">Нет врачей по заданному фильтру.</td>
+            <td colspan="5" class="text-center text-muted">Нет врачей по заданному фильтру.</td>
           </tr>
           {% endfor %}
         </tbody>

@@ -1,5 +1,5 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from appointments.models import AppointmentRequest
 from accounts.models import User
@@ -89,14 +89,14 @@ def my_requests_view(request):
 
 
 
-from django.views.generic import ListView, UpdateView, DeleteView
+from django.views.generic import ListView, UpdateView, DeleteView, CreateView
 from django.contrib.auth.mixins import UserPassesTestMixin
 
 class DepartmentListView(UserPassesTestMixin, ListView):
     model = Department
     template_name = 'admim_custom/departments.html'
     context_object_name = 'departments'
-    paginate_by = 20  # если нужно
+    paginate_by = 20  
 
     def test_func(self):
         return self.request.user.is_superuser or self.request.user.is_super_admin()
@@ -118,6 +118,54 @@ class DepartmentDeleteView(UserPassesTestMixin, DeleteView):
     model = Department
     template_name = 'admim_custom/department_delete.html'
     success_url = reverse_lazy('admim_custom:departments')
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+from accounts.forms import  DoctorForm
+
+
+from django.utils.crypto import get_random_string
+
+class DoctorCreateView(UserPassesTestMixin, CreateView):
+    model = User
+    form_class = DoctorForm
+    template_name = 'admim_custom/doctor_create.html'
+    success_url = reverse_lazy('admim_custom:doctor-create')
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.user_type = User.UserType.DOCTOR
+        password = get_random_string(length=8)
+        user.set_password(password)
+
+        if not user.institution and self.request.user.user_type == User.UserType.INSTITUTION_ADMIN:
+            user.institution = self.request.user.institution
+
+        user.save()
+        return redirect(self.success_url + f"?password={password}")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['generated_password'] = self.request.GET.get('password')
+        return context
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+class DoctorEditView(UserPassesTestMixin, UpdateView):
+    model = User
+    form_class = DoctorForm
+    template_name = 'admim_custom/doctor_edit.html'
+    success_url = reverse_lazy('admim_custom:doctors')
+
+    def test_func(self):
+        return self.request.user.is_superuser or self.request.user.is_super_admin()
+
+class DoctorDeleteView(UserPassesTestMixin, DeleteView):
+    model = User
+    template_name = 'admim_custom/doctor_delete.html'
+    success_url = reverse_lazy('admim_custom:doctors')
 
     def test_func(self):
         return self.request.user.is_superuser or self.request.user.is_super_admin()

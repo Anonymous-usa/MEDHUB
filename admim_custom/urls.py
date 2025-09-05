@@ -1,6 +1,10 @@
 from django.urls import path
 from admim_custom import views
-from .views import DepartmentListView, DepartmentDeleteView,DepartmentEditView
+from .views import (
+    DepartmentListView, DepartmentDeleteView,
+    DepartmentEditView, DoctorDeleteView, 
+    DoctorEditView, DoctorCreateView)
+
 app_name = "admim_custom"
 
 urlpatterns = [
@@ -22,5 +26,7 @@ urlpatterns = [
 
     # Панель врача
     path("my-requests/", views.my_requests_view, name="my_requests"),
+    path('doctors/create/', DoctorCreateView.as_view(), name='doctor-create'),
+    path('doctors/<int:pk>/edit/', DoctorEditView.as_view(), name='doctor-edit'),
+    path('doctors/<int:pk>/delete/', DoctorDeleteView.as_view(), name='doctor-delete'),
 ]
-

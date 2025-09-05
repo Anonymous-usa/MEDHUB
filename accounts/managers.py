@@ -21,6 +21,7 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
 
         user_type = extra_fields.get('user_type', self.model.UserType.PATIENT)
+        extra_fields['user_type'] = user_type
         institution = extra_fields.get('institution', None)
 
         if user_type in [self.model.UserType.DOCTOR, self.model.UserType.INSTITUTION_ADMIN] and not institution:
