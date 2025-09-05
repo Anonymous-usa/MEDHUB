@@ -185,3 +185,10 @@ class LogoutView(GenericAPIView):
                 {"detail": _("Неверный токен.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+from rest_framework import generics
+from accounts.serializers import DoctorRegistrationSerializer
+
+class DoctorRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = DoctorRegistrationSerializer

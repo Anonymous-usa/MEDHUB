@@ -3,7 +3,8 @@ from .views import (
     PatientRegistrationView,
     LoginView,
     UserProfileView,
-    LogoutView
+    LogoutView,
+    DoctorRegistrationView
 )
 
 app_name = 'accounts'
@@ -13,4 +14,5 @@ urlpatterns = [
     path('v1/login/',           LoginView.as_view(),              name='login'),
     path('v1/profile/',         UserProfileView.as_view(),        name='user-profile'),
     path('v1/logout/',          LogoutView.as_view(),             name='logout'),
+    path('v1/register/doctor/', DoctorRegistrationView.as_view(), name='doctor-register'),
 ]

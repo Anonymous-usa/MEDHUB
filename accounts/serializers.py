@@ -60,3 +60,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     password = serializers.CharField(write_only=True)
+
+
+from django.utils.crypto import get_random_string
+
+class DoctorRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'date_of_birth', 'institution']
+
+    def create(self, validated_data):
+        validated_data['user_type'] = User.UserType.DOCTOR
+        password = get_random_string(length=8)
+        user = User.objects.create_user(password=password, **validated_data)
+        # TODO: отправить SMS/email с паролем
+        return user

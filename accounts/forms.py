@@ -53,3 +53,11 @@ class CustomUserChangeForm(UserChangeForm):
         if user_type == User.UserType.PATIENT and institution:
             raise forms.ValidationError("Пациент не должен быть привязан к учреждению.")
         return cleaned_data
+
+
+
+class DoctorForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'date_of_birth', 'institution', 'is_verified', 'is_active']
+
