@@ -74,6 +74,6 @@ class InstitutionRegistrationSerializer(serializers.ModelSerializer):
         model = Institution
         fields = [
             'name', 'slug', 'institution_type', 'ownership_type',
-            'region', 'city', 'address', 'phone', 'email',
-            'description', 'license_number', 'is_active', 'is_top'
+            'city', 'address', 'phone', 'email',
+            'description',  'is_active', 'is_top'
         ]
