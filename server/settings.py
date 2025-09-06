@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     'statistics.apps.StatisticsConfig',
     'notifications.apps.NotificationsConfig',
     'message.apps.MessegeConfig',
+
+#     'unfold',
+#     'unfold.contrib.filters',
+#     'unfold.contrib.forms',
+#     'unfold.contrib.import_export',
 ]
 
 # 4. Middleware
@@ -161,7 +166,7 @@ SPECTACULAR_SETTINGS = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -173,6 +178,11 @@ TEMPLATES = [
         },
     },
 ]
+
+#TEMPLATES[0]['OPTIONS']['context_processors'] += [
+  #  'unfold.context_processors.unfold',
+# ]
+
 
 # 13. Auto Field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

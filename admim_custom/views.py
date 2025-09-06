@@ -19,6 +19,35 @@ def dashboard_view(request):
     }
     return render(request, 'admim_custom/dashboard.html', {'stats': stats})
 
+# from unfold.views import UnfoldModelAdminViewMixin
+# from unfold.widgets import StatsWidget, GridWidget
+# from django.views.generic import TemplateView
+# from appointments.models import AppointmentRequest
+# from accounts.models import User
+# from institutions.models import Institution
+# from reviews.models import Review
+
+# class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
+#     template_name = "unfold/dashboard.html"  # или свой шаблон
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+
+#         stats = [
+#             StatsWidget(title="Всего записей", value=AppointmentRequest.objects.count(), icon="calendar"),
+#             StatsWidget(title="Принятые", value=AppointmentRequest.objects.filter(status='accepted').count(), icon="check"),
+#             StatsWidget(title="Ожидают", value=AppointmentRequest.objects.filter(status='pending').count(), icon="clock"),
+#             StatsWidget(title="Отклонённые", value=AppointmentRequest.objects.filter(status='rejected').count(), icon="x"),
+#             StatsWidget(title="Учреждения", value=Institution.objects.count(), icon="hospital"),
+#             StatsWidget(title="Отзывы", value=Review.objects.count(), icon="star"),
+#             StatsWidget(title="Врачи", value=User.objects.filter(user_type='worker').count(), icon="user"),
+#         ]
+
+#         context["widgets"] = [GridWidget(columns=3, children=stats)]
+#         return context
+
+
+
 @staff_member_required
 def institutions_view(request):
     region = request.GET.get('region')
@@ -48,7 +77,7 @@ def institution_detail_view(request, institution_id):
 @staff_member_required
 def doctors_view(request):
     institution_id = request.GET.get('institution')
-    doctors = User.objects.filter(user_type='worker').select_related('institution')
+    doctors = User.objects.filter(user_type='doctor').select_related('institution')
     if institution_id:
         doctors = doctors.filter(institution_id=institution_id)
     paginator = Paginator(doctors, 25)
@@ -127,21 +156,34 @@ from accounts.forms import  DoctorForm
 
 from django.utils.crypto import get_random_string
 
+from django.views.generic import CreateView
+from django.contrib.auth.mixins import UserPassesTestMixin
+from accounts.forms import DoctorForm
+from accounts.models import User
+from django.urls import reverse_lazy
+from django.utils.crypto import get_random_string
+from django.shortcuts import redirect
+
 class DoctorCreateView(UserPassesTestMixin, CreateView):
     model = User
     form_class = DoctorForm
     template_name = 'admim_custom/doctor_create.html'
     success_url = reverse_lazy('admim_custom:doctor-create')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.instance.user_type = User.UserType.DOCTOR  # 👈 установить до валидации
+        return form
+
     def form_valid(self, form):
         user = form.save(commit=False)
-        user.user_type = User.UserType.DOCTOR
         password = get_random_string(length=8)
         user.set_password(password)
 
         if not user.institution and self.request.user.user_type == User.UserType.INSTITUTION_ADMIN:
             user.institution = self.request.user.institution
 
+        user.full_clean()
         user.save()
         return redirect(self.success_url + f"?password={password}")
 
@@ -152,6 +194,7 @@ class DoctorCreateView(UserPassesTestMixin, CreateView):
 
     def test_func(self):
         return self.request.user.is_superuser or self.request.user.is_super_admin()
+
 
 class DoctorEditView(UserPassesTestMixin, UpdateView):
     model = User

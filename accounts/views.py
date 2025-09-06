@@ -1,40 +1,33 @@
 import logging
 from django.db import IntegrityError
 from django.contrib.auth import authenticate
-from rest_framework import status, serializers
+from django.utils.translation import gettext_lazy as _
+
+from rest_framework import status, serializers, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import GenericAPIView
-from django.utils.translation import gettext_lazy as _
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from drf_spectacular.utils import extend_schema
-from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
-from .models import User
-from .serializers import (
+from accounts.models import User
+from accounts.serializers import (
     PatientRegistrationSerializer,
     UserProfileSerializer,
-    LoginSerializer
+    LoginSerializer,
+    AccountsLogoutRequestSerializer,
+    AccountsErrorSerializer,
+    AccountsSuccessSerializer,
+    DoctorSerializer
 )
-from .validators import validate_phone_number
-
-
+from accounts.validators import validate_phone_number
 
 logger = logging.getLogger(__name__)
 
-# 🔧 Swagger helper serializers (renamed to avoid collisions)
-class AccountsErrorSerializer(serializers.Serializer):
-    detail = serializers.CharField()
 
-class AccountsSuccessSerializer(serializers.Serializer):
-    detail = serializers.CharField()
-
-class AccountsLogoutRequestSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
-
-
+# 🔹 Регистрация пациента
 class PatientRegistrationView(GenericAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [AnonRateThrottle]
@@ -62,14 +55,15 @@ class PatientRegistrationView(GenericAPIView):
                 {"detail": _("Пользователь с таким номером телефона или email уже существует.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Ошибка при регистрации пациента")
             return Response(
                 {"detail": _("Внутренняя ошибка сервера.")},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
+# 🔹 Аутентификация
 class LoginView(GenericAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [AnonRateThrottle]
@@ -93,22 +87,13 @@ class LoginView(GenericAPIView):
 
         if user is None:
             logger.warning(f"Login failed: invalid credentials for {phone_number}")
-            return Response(
-                {"detail": _("Неверный номер телефона или пароль.")},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": _("Неверный номер телефона или пароль.")}, status=status.HTTP_400_BAD_REQUEST)
         if not user.is_active:
             logger.warning(f"Login blocked: inactive account {phone_number}")
-            return Response(
-                {"detail": _("Аккаунт деактивирован.")},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"detail": _("Аккаунт деактивирован.")}, status=status.HTTP_403_FORBIDDEN)
         if not user.is_verified:
             logger.warning(f"Login blocked: unverified account {phone_number}")
-            return Response(
-                {"detail": _("Аккаунт не верифицирован.")},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"detail": _("Аккаунт не верифицирован.")}, status=status.HTTP_403_FORBIDDEN)
 
         logger.info(f"Пользователь вошёл: {user.phone_number}")
         refresh = RefreshToken.for_user(user)
@@ -121,6 +106,7 @@ class LoginView(GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
+# 🔹 Профиль пользователя
 class UserProfileView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     throttle_scope = 'profile'
@@ -157,6 +143,7 @@ class UserProfileView(GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 🔹 Выход из системы
 class LogoutView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = AccountsLogoutRequestSerializer
@@ -170,25 +157,43 @@ class LogoutView(GenericAPIView):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
             logger.warning("Logout failed: no token provided")
-            return Response(
-                {"detail": _("Токен не предоставлен.")},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": _("Токен не предоставлен.")}, status=status.HTTP_400_BAD_REQUEST)
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
             logger.info(f"Токен отозван: {refresh_token}")
             return Response({"detail": _("Успешный выход из системы.")}, status=status.HTTP_200_OK)
-        except Exception as e:
+        except Exception:
             logger.exception("Ошибка при выходе из системы")
-            return Response(
-                {"detail": _("Неверный токен.")},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": _("Неверный токен.")}, status=status.HTTP_400_BAD_REQUEST)
 
-from rest_framework import generics
-from accounts.serializers import DoctorRegistrationSerializer
 
-class DoctorRegistrationView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = DoctorRegistrationSerializer
+# 🔹 Управление врачами
+@extend_schema_view(
+    list=extend_schema(description="Список врачей"),
+    retrieve=extend_schema(description="Детали врача"),
+    create=extend_schema(description="Создание врача"),
+    update=extend_schema(description="Обновление врача"),
+    partial_update=extend_schema(description="Частичное обновление врача"),
+    destroy=extend_schema(description="Удаление врача"),
+)
+class DoctorViewSet(viewsets.ModelViewSet):
+    serializer_class = DoctorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_super_admin():
+            return User.objects.filter(user_type=User.UserType.DOCTOR)
+        elif user.is_institution_admin():
+            return User.objects.filter(user_type=User.UserType.DOCTOR, institution=user.institution)
+        elif user.is_doctor():
+            return User.objects.filter(id=user.id)
+        return User.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_institution_admin():
+            serializer.save(institution=user.institution, user_type=User.UserType.DOCTOR)
+        else:
+            serializer.save(user_type=User.UserType.DOCTOR)
