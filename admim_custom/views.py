@@ -1,214 +1,91 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import get_object_or_404, render, redirect
-from django.core.paginator import Paginator
-from appointments.models import AppointmentRequest
-from accounts.models import User
-from institutions.models import Department, Institution
-from reviews.models import Review
-
-@staff_member_required
-def dashboard_view(request):
-    stats = {
-        'appointments_total': AppointmentRequest.objects.count(),
-        'appointments_accepted': AppointmentRequest.objects.filter(status='accepted').count(),
-        'appointments_pending': AppointmentRequest.objects.filter(status='pending').count(),
-        'appointments_rejected': AppointmentRequest.objects.filter(status='rejected').count(),
-        'institutions_total': Institution.objects.count(),
-        'reviews_total': Review.objects.count(),
-        'doctors_total': User.objects.filter(user_type='worker').count(),
-    }
-    return render(request, 'admim_custom/dashboard.html', {'stats': stats})
-
-# from unfold.views import UnfoldModelAdminViewMixin
-# from unfold.widgets import StatsWidget, GridWidget
-# from django.views.generic import TemplateView
+# from django.contrib.admin.views.decorators import staff_member_required
+# from django.shortcuts import get_object_or_404, render, redirect
+# from django.core.paginator import Paginator
 # from appointments.models import AppointmentRequest
 # from accounts.models import User
-# from institutions.models import Institution
+# from institutions.models import Department, Institution
 # from reviews.models import Review
 
-# class DashboardView(UnfoldModelAdminViewMixin, TemplateView):
-#     template_name = "unfold/dashboard.html"  # или свой шаблон
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-
-#         stats = [
-#             StatsWidget(title="Всего записей", value=AppointmentRequest.objects.count(), icon="calendar"),
-#             StatsWidget(title="Принятые", value=AppointmentRequest.objects.filter(status='accepted').count(), icon="check"),
-#             StatsWidget(title="Ожидают", value=AppointmentRequest.objects.filter(status='pending').count(), icon="clock"),
-#             StatsWidget(title="Отклонённые", value=AppointmentRequest.objects.filter(status='rejected').count(), icon="x"),
-#             StatsWidget(title="Учреждения", value=Institution.objects.count(), icon="hospital"),
-#             StatsWidget(title="Отзывы", value=Review.objects.count(), icon="star"),
-#             StatsWidget(title="Врачи", value=User.objects.filter(user_type='worker').count(), icon="user"),
-#         ]
-
-#         context["widgets"] = [GridWidget(columns=3, children=stats)]
-#         return context
+# @staff_member_required
+# def dashboard_view(request):
+#     stats = {
+#         'appointments_total': AppointmentRequest.objects.count(),
+#         'appointments_accepted': AppointmentRequest.objects.filter(status='accepted').count(),
+#         'appointments_pending': AppointmentRequest.objects.filter(status='pending').count(),
+#         'appointments_rejected': AppointmentRequest.objects.filter(status='rejected').count(),
+#         'institutions_total': Institution.objects.count(),
+#         'reviews_total': Review.objects.count(),
+#         'doctors_total': User.objects.filter(user_type='worker').count(),
+#     }
+#     return render(request, 'admim_custom/dashboard.html', {'stats': stats})
 
 
+# @staff_member_required
+# def institutions_view(request):
+#     region = request.GET.get('region')
+#     institutions = Institution.objects.all()
+#     if region:
+#         institutions = institutions.filter(city__region__icontains=region)
+#     paginator = Paginator(institutions, 20)
+#     page_obj = paginator.get_page(request.GET.get('page'))
+#     return render(request, 'admim_custom/institutions.html', {'page_obj': page_obj})
 
-@staff_member_required
-def institutions_view(request):
-    region = request.GET.get('region')
-    institutions = Institution.objects.all()
-    if region:
-        institutions = institutions.filter(city__region__icontains=region)
-    paginator = Paginator(institutions, 20)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'admim_custom/institutions.html', {'page_obj': page_obj})
+# @staff_member_required
+# def institution_detail_view(request, institution_id):
+#     institution = get_object_or_404(Institution, id=institution_id)
+#     departments = Department.objects.filter(institution=institution)
+#     doctors = User.objects.filter(institution=institution, user_type='worker')
+#     appointments = AppointmentRequest.objects.filter(doctor__institution=institution)
+#     reviews = Review.objects.filter(appointment__doctor__institution=institution)
+#     context = {
+#         'institution': institution,
+#         'departments': departments,
+#         'doctors': doctors,
+#         'appointments': appointments,
+#         'reviews': reviews,
+#     }
+#     return render(request, 'admim_custom/institution_detail.html', context)
 
-@staff_member_required
-def institution_detail_view(request, institution_id):
-    institution = get_object_or_404(Institution, id=institution_id)
-    departments = Department.objects.filter(institution=institution)
-    doctors = User.objects.filter(institution=institution, user_type='worker')
-    appointments = AppointmentRequest.objects.filter(doctor__institution=institution)
-    reviews = Review.objects.filter(appointment__doctor__institution=institution)
-    context = {
-        'institution': institution,
-        'departments': departments,
-        'doctors': doctors,
-        'appointments': appointments,
-        'reviews': reviews,
-    }
-    return render(request, 'admim_custom/institution_detail.html', context)
+# @staff_member_required
+# def doctors_view(request):
+#     institution_id = request.GET.get('institution')
+#     doctors = User.objects.filter(user_type='doctor').select_related('institution')
+#     if institution_id:
+#         doctors = doctors.filter(institution_id=institution_id)
+#     paginator = Paginator(doctors, 25)
+#     page_obj = paginator.get_page(request.GET.get('page'))
+#     return render(request, 'admim_custom/doctors.html', {'page_obj': page_obj})
 
-@staff_member_required
-def doctors_view(request):
-    institution_id = request.GET.get('institution')
-    doctors = User.objects.filter(user_type='doctor').select_related('institution')
-    if institution_id:
-        doctors = doctors.filter(institution_id=institution_id)
-    paginator = Paginator(doctors, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'admim_custom/doctors.html', {'page_obj': page_obj})
+# @staff_member_required
+# def my_institution_view(request):
+#     institution = request.user.institution
+#     departments = Department.objects.filter(institution=institution)
+#     doctors = User.objects.filter(institution=institution, user_type='worker')
+#     appointments = AppointmentRequest.objects.filter(doctor__institution=institution)
+#     reviews = Review.objects.filter(appointment__doctor__institution=institution)
+#     context = {
+#         'institution': institution,
+#         'departments': departments,
+#         'doctors': doctors,
+#         'appointments': appointments,
+#         'reviews': reviews,
+#     }
+#     return render(request, 'admim_custom/my_institution.html', context)
 
-@staff_member_required
-def my_institution_view(request):
-    institution = request.user.institution
-    departments = Department.objects.filter(institution=institution)
-    doctors = User.objects.filter(institution=institution, user_type='worker')
-    appointments = AppointmentRequest.objects.filter(doctor__institution=institution)
-    reviews = Review.objects.filter(appointment__doctor__institution=institution)
-    context = {
-        'institution': institution,
-        'departments': departments,
-        'doctors': doctors,
-        'appointments': appointments,
-        'reviews': reviews,
-    }
-    return render(request, 'admim_custom/my_institution.html', context)
+# @staff_member_required
+# def my_appointments_view(request):
+#     appointments = AppointmentRequest.objects.filter(doctor__institution=request.user.institution)
+#     return render(request, 'admim_custom/my_appointments.html', {'appointments': appointments})
 
-@staff_member_required
-def my_appointments_view(request):
-    appointments = AppointmentRequest.objects.filter(doctor__institution=request.user.institution)
-    return render(request, 'admim_custom/my_appointments.html', {'appointments': appointments})
+# @staff_member_required
+# def my_reviews_view(request):
+#     reviews = Review.objects.filter(appointment__doctor__institution=request.user.institution)
+#     return render(request, 'admim_custom/my_reviews.html', {'reviews': reviews})
 
-@staff_member_required
-def my_reviews_view(request):
-    reviews = Review.objects.filter(appointment__doctor__institution=request.user.institution)
-    return render(request, 'admim_custom/my_reviews.html', {'reviews': reviews})
-
-@staff_member_required
-def my_requests_view(request):
-    appointments = AppointmentRequest.objects.filter(doctor=request.user)
-    return render(request, 'admim_custom/my_requests.html', {'appointments': appointments})
+# @staff_member_required
+# def my_requests_view(request):
+#     appointments = AppointmentRequest.objects.filter(doctor=request.user)
+#     return render(request, 'admim_custom/my_requests.html', {'appointments': appointments})
 
 
 
-
-from django.views.generic import ListView, UpdateView, DeleteView, CreateView
-from django.contrib.auth.mixins import UserPassesTestMixin
-
-class DepartmentListView(UserPassesTestMixin, ListView):
-    model = Department
-    template_name = 'admim_custom/departments.html'
-    context_object_name = 'departments'
-    paginate_by = 20  
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-from institutions.forms import DepartmentForm
-from django.urls import reverse_lazy
-
-
-class DepartmentEditView(UserPassesTestMixin, UpdateView):
-    model = Department
-    form_class = DepartmentForm
-    template_name = 'admim_custom/department_edit.html'
-    success_url = reverse_lazy('admim_custom:departments')
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-    
-class DepartmentDeleteView(UserPassesTestMixin, DeleteView):
-    model = Department
-    template_name = 'admim_custom/department_delete.html'
-    success_url = reverse_lazy('admim_custom:departments')
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-from accounts.forms import  DoctorForm
-
-
-from django.utils.crypto import get_random_string
-
-from django.views.generic import CreateView
-from django.contrib.auth.mixins import UserPassesTestMixin
-from accounts.forms import DoctorForm
-from accounts.models import User
-from django.urls import reverse_lazy
-from django.utils.crypto import get_random_string
-from django.shortcuts import redirect
-
-class DoctorCreateView(UserPassesTestMixin, CreateView):
-    model = User
-    form_class = DoctorForm
-    template_name = 'admim_custom/doctor_create.html'
-    success_url = reverse_lazy('admim_custom:doctor-create')
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.instance.user_type = User.UserType.DOCTOR  # 👈 установить до валидации
-        return form
-
-    def form_valid(self, form):
-        user = form.save(commit=False)
-        password = get_random_string(length=8)
-        user.set_password(password)
-
-        if not user.institution and self.request.user.user_type == User.UserType.INSTITUTION_ADMIN:
-            user.institution = self.request.user.institution
-
-        user.full_clean()
-        user.save()
-        return redirect(self.success_url + f"?password={password}")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['generated_password'] = self.request.GET.get('password')
-        return context
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-
-class DoctorEditView(UserPassesTestMixin, UpdateView):
-    model = User
-    form_class = DoctorForm
-    template_name = 'admim_custom/doctor_edit.html'
-    success_url = reverse_lazy('admim_custom:doctors')
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-class DoctorDeleteView(UserPassesTestMixin, DeleteView):
-    model = User
-    template_name = 'admim_custom/doctor_delete.html'
-    success_url = reverse_lazy('admim_custom:doctors')
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()

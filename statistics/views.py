@@ -66,3 +66,44 @@ class InstitutionStatsView(APIView):
         }
         serializer = InstitutionSpecificStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# for admin-panel
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from accounts.models import User
+from appointments.models import AppointmentRequest
+from institutions.models import Institution
+from reviews.models import Review
+
+from drf_spectacular.utils import extend_schema
+
+@extend_schema(
+    tags=["Admin Dashboard"],
+    description="Статистика для админ-панели (учреждения, заявки, врачи, отзывы)",
+    responses={200: dict}
+)
+
+class AdminDashboardStatsView(APIView):
+    
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not user.is_super_admin() and not user.is_institution_admin():
+            return Response({"detail": "Нет доступа"}, status=403)
+
+        stats = {
+            "appointments_total": AppointmentRequest.objects.count(),
+            "appointments_accepted": AppointmentRequest.objects.filter(status="accepted").count(),
+            "appointments_pending": AppointmentRequest.objects.filter(status="pending").count(),
+            "appointments_rejected": AppointmentRequest.objects.filter(status="rejected").count(),
+            "institutions_total": Institution.objects.count(),
+            "doctors_total": User.objects.filter(user_type=User.UserType.DOCTOR).count(),
+            "reviews_total": Review.objects.count(),
+        }
+        return Response(stats)
