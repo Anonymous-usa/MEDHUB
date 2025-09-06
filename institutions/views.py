@@ -94,3 +94,36 @@ class InstitutionRegistrationView(APIView):
             institution = serializer.save()
             return Response({"detail": "Учреждение и администратор успешно зарегистрированы"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+from rest_framework import viewsets, permissions
+from drf_spectacular.utils import extend_schema_view, extend_schema
+from .models import Department
+from .serializers import DepartmentSerializer
+from accounts.models import User
+
+@extend_schema_view(
+    list=extend_schema(description="Список отделений"),
+    retrieve=extend_schema(description="Детали отделения"),
+    create=extend_schema(description="Создание отделения"),
+    update=extend_schema(description="Обновление отделения"),
+    partial_update=extend_schema(description="Частичное обновление отделения"),
+    destroy=extend_schema(description="Удаление отделения"),
+)
+class DepartmentViewSet(viewsets.ModelViewSet):
+    serializer_class = DepartmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_super_admin():
+            return Department.objects.select_related('institution')
+        elif user.is_institution_admin():
+            return Department.objects.filter(institution=user.institution)
+        return Department.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_institution_admin():
+            serializer.save(institution=user.institution)
+        elif user.is_super_admin():
+            serializer.save()
