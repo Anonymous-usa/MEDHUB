@@ -1,25 +1,23 @@
 #!/bin/bash
 set -e
 
+echo "🔍 Validating environment..."
+if [ -z "$DJANGO_SECRET_KEY" ]; then
+  echo "❌ .env not loaded. Aborting startup."
+  exit 1
+fi
+
+echo "⏳ Waiting for PostgreSQL to be ready..."
+until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$POSTGRES_USER"; do
+  sleep 2
+done
+
 echo "🔧 Running makemigrations and migrate..."
 python manage.py makemigrations
 python manage.py migrate
 
 echo "📞 Creating phone-based superuser if not exists..."
-DJANGO_SUPERUSER_PHONE=${DJANGO_SUPERUSER_PHONE:-+992900000001}
-DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-adminpass}
-
-python manage.py shell << END
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(phone_number='${DJANGO_SUPERUSER_PHONE}').exists():
-    User.objects.create_superuser(
-        phone_number='${DJANGO_SUPERUSER_PHONE}',
-        email='admin@medhub.tj',
-        password='${DJANGO_SUPERUSER_PASSWORD}'
-    )
-
-END
+python manage.py shell < /app/scripts/create_superuser.py
 
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput

@@ -225,3 +225,13 @@ LOGGING = {
 
 # 17. Testing
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
