@@ -23,7 +23,7 @@ services:
     container_name: medhub_redis
     restart: unless-stopped
     expose:
-      - "6379"  # Internal use only
+      - "6379"  
 
   web:
     build:
