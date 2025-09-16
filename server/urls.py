@@ -45,15 +45,53 @@
 
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.authtoken.views import obtain_auth_token
+
 
 urlpatterns = [
     # API
-    path('api/schema/', SpectacularAPIView.as_view(urlconf='server.api_urls'), name='api-schema'),
+    path('api/schema/', SpectacularAPIView.as_view(urlconf='server.urls'), name='api-schema'),
     path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='api-schema'), name='api-swagger'),
-    path('api/', include('server.api_urls')),
+    # path('api/', include('server.api_urls')),
+
 
     # WEB (admin)
-    path('web/schema/', SpectacularAPIView.as_view(urlconf='server.web_urls'), name='web-schema'),
+    path('web/schema/', SpectacularAPIView.as_view(urlconf='server.urls'), name='web-schema'),
     path('web/docs/swagger/', SpectacularSwaggerView.as_view(url_name='web-schema'), name='web-swagger'),
-    path('web/', include('server.web_urls')),
+    # path('web/', include('server.web_urls')),
+
+
+   # Accounts
+    path('accounts/', include('accounts.urls', namespace='accounts')),
+
+    # Institutions
+    path('institutions/', include('institutions.urls', namespace='institutions')),
+
+    # Appointments
+    path('appointments/', include('appointments.urls', namespace='appointments')),
+
+    # Core (regions, cities)
+    path('core/', include('core.urls', namespace='core')),
+
+    # Reviews
+    path('reviews/', include('reviews.urls', namespace='reviews')),
+
+    # Statistics (системная статистика для супер-админа)
+    path('statistics/', include('statistics.urls', namespace='statistics')),
+
+    # Notifications
+    path('notifications/', include('notifications.urls', namespace='notifications')),
+
+    # Messages / чат
+    path('message/', include('message.urls', namespace='message')),
+
 ]
+
+
+# from django.http import HttpResponse
+
+# def test_view(request):
+#     return HttpResponse("OK")
+
+# urlpatterns += [path('accounts/test/', test_view)]
+

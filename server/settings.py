@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'statistics.apps.StatisticsConfig',
     'notifications.apps.NotificationsConfig',
     'message.apps.MessegeConfig',
+    'django_extensions',
 
 #     'unfold',
 #     'unfold.contrib.filters',
@@ -230,6 +231,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": os.getenv("REDIS_URL"),
+        # "LOCATION": 'redis://127.0.0.1:6379/0',
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
