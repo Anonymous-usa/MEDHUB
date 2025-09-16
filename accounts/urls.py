@@ -27,7 +27,7 @@
 
 from django.db import router
 from django.urls import include, path
-from .views import DoctorViewSet, LoginSuperuserView, LoginView, PatientRegistrationView, UserProfileView, LogoutView
+from .views import DoctorViewSet,  LoginView, PatientRegistrationView, UserProfileView, LogoutView
 from rest_framework.routers import DefaultRouter
 
 app_name = 'accounts'
