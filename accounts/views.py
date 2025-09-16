@@ -197,3 +197,42 @@ class DoctorViewSet(viewsets.ModelViewSet):
             serializer.save(institution=user.institution, user_type=User.UserType.DOCTOR)
         else:
             serializer.save(user_type=User.UserType.DOCTOR)
+
+
+from rest_framework.permissions import IsAdminUser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+from .serializers import SuperUserLoginSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+# class LoginSuperuserView(APIView):
+#     permission_classes = [IsAdminUser]  # доступ только для суперпользователей
+#     serializer_class  = SuperUserLoginSerializer
+
+#     def post(self, request):
+#         serializer = SuperUserLoginSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         phone_number = serializer.validated_data['phone_number']
+#         password = serializer.validated_data['password']
+#         user = authenticate(phone_number=phone_number, password=password)
+
+#         if user is None or not user.is_superuser:
+#             return Response({"detail": "Invalid credentials or not a superuser."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Генерация токенов
+#         refresh = RefreshToken.for_user(user)
+#         return Response({
+#             "user": {
+#                 "id": user.id,
+#                 "phone_number": user.phone_number,
+#                 "is_superuser": user.is_superuser,
+#             },
+#             "tokens": {
+#                 "refresh": str(refresh),
+#                 "access": str(refresh.access_token),
+#             }
+#         }, status=status.HTTP_200_OK)
