@@ -199,13 +199,13 @@ class DoctorViewSet(viewsets.ModelViewSet):
             serializer.save(user_type=User.UserType.DOCTOR)
 
 
-from rest_framework.permissions import IsAdminUser
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import authenticate
-from .serializers import SuperUserLoginSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework.permissions import IsAdminUser
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status
+# from django.contrib.auth import authenticate
+# from .serializers import SuperUserLoginSerializer
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 # class LoginSuperuserView(APIView):
 #     permission_classes = [IsAdminUser]  # доступ только для суперпользователей
