@@ -1,13 +1,18 @@
 import logging
-from rest_framework import viewsets, filters, status, permissions
+from rest_framework import viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from .models import Institution
-from .serializers import InstitutionAdminSerializer, InstitutionPublicSerializer, InstitutionRegistrationSerializer
-from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
+from .serializers import (
+    InstitutionAdminSerializer,
+    InstitutionPublicSerializer,
+    InstitutionWithAdminSerializer
+)
+from accounts.permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 
 logger = logging.getLogger(__name__)
 
@@ -75,76 +80,50 @@ class InstitutionViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
-class IsSuperAdminOrSuperUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user and (
-            request.user.is_authenticated and
-            (request.user.is_superuser or request.user.is_super_admin())
-        )
-
-
 @extend_schema(
-    request=InstitutionRegistrationSerializer,
-    responses={201: InstitutionRegistrationSerializer},
-    description="Регистрация нового медицинского учреждения"
+    request=InstitutionWithAdminSerializer,
+    responses={201: InstitutionWithAdminSerializer},
+    description="Регистрация учреждения и администратора (только SuperUser)"
 )
 class InstitutionRegistrationView(APIView):
-    permission_classes = [IsSuperAdminOrSuperUser]
+    permission_classes = [IsAuthenticated, IsSuperAdmin]
 
     def post(self, request):
-        serializer = InstitutionRegistrationSerializer(data=request.data)
+        serializer = InstitutionWithAdminSerializer(data=request.data)
         if serializer.is_valid():
             institution = serializer.save()
-            logger.info(f"Institution registered: {institution.name}")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        logger.warning(f"Institution registration failed: {serializer.errors}")
+            return Response({"detail": "Учреждение и администратор успешно зарегистрированы"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-from django.views.generic.edit import CreateView
-from django.contrib.auth.mixins import UserPassesTestMixin
-from .models import Institution
-from .forms import InstitutionForm  
 
-class InstitutionFormView(UserPassesTestMixin, CreateView):
-    model = Institution
-    form_class = InstitutionForm
-    template_name = 'admim_custom/institutionregister.html'
-    success_url = '/dashboard/'
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-from django.views.generic.edit import UpdateView, DeleteView
-from django.urls import reverse_lazy
-
-class InstitutionEditView(UserPassesTestMixin, UpdateView):
-    model = Institution
-    form_class = InstitutionForm
-    template_name = 'admim_custom/institution_edit.html'
-    success_url = reverse_lazy('admim_custom:institutions')  
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-    
-
-
-class InstitutionDeleteView(UserPassesTestMixin, DeleteView):
-    model = Institution
-    template_name = 'admim_custom/institution_delete.html'
-    success_url = reverse_lazy('admim_custom:institutions')
-
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
-
-from django.views.generic.edit import CreateView
+from rest_framework import viewsets, permissions
+from drf_spectacular.utils import extend_schema_view, extend_schema
 from .models import Department
-from .forms import DepartmentForm
+from .serializers import DepartmentSerializer
+from accounts.models import User
 
-class DepartmentCreateView(UserPassesTestMixin, CreateView):
-    model = Department
-    form_class = DepartmentForm
-    template_name = 'admim_custom/department_create.html'
-    success_url = '/institutions/'  # или куда тебе нужно
+@extend_schema_view(
+    list=extend_schema(description="Список отделений"),
+    retrieve=extend_schema(description="Детали отделения"),
+    create=extend_schema(description="Создание отделения"),
+    update=extend_schema(description="Обновление отделения"),
+    partial_update=extend_schema(description="Частичное обновление отделения"),
+    destroy=extend_schema(description="Удаление отделения"),
+)
+class DepartmentViewSet(viewsets.ModelViewSet):
+    serializer_class = DepartmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def test_func(self):
-        return self.request.user.is_superuser or self.request.user.is_super_admin()
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_super_admin():
+            return Department.objects.select_related('institution')
+        elif user.is_institution_admin():
+            return Department.objects.filter(institution=user.institution)
+        return Department.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_institution_admin():
+            serializer.save(institution=user.institution)
+        elif user.is_super_admin():
+            serializer.save()

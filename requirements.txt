@@ -11,7 +11,10 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 Django==5.2.5
 django-cors-headers==3.14.0
+django-extensions==4.1
 django-filter==25.1
+django-redis==6.0.0
+django-unfold==0.60.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-spectacular==0.28.0
@@ -27,6 +30,7 @@ psycopg2-binary==2.9.5
 PyJWT==2.10.1
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
+redis==6.4.0
 referencing==0.36.2
 rpds-py==0.27.1
 six==1.17.0

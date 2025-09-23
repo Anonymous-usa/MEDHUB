@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'channels',
 
-    'admim_custom.apps.AdmimCustomConfig',
+    # 'admim_custom.apps.AdmimCustomConfig',
     'core.apps.CoreConfig',
     'accounts.apps.AccountsConfig',
     'institutions.apps.InstitutionsConfig',
@@ -39,6 +39,12 @@ INSTALLED_APPS = [
     'statistics.apps.StatisticsConfig',
     'notifications.apps.NotificationsConfig',
     'message.apps.MessegeConfig',
+    'django_extensions',
+
+#     'unfold',
+#     'unfold.contrib.filters',
+#     'unfold.contrib.forms',
+#     'unfold.contrib.import_export',
 ]
 
 # 4. Middleware
@@ -161,7 +167,7 @@ SPECTACULAR_SETTINGS = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -173,6 +179,11 @@ TEMPLATES = [
         },
     },
 ]
+
+#TEMPLATES[0]['OPTIONS']['context_processors'] += [
+  #  'unfold.context_processors.unfold',
+# ]
+
 
 # 13. Auto Field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -215,3 +226,14 @@ LOGGING = {
 
 # 17. Testing
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        # "LOCATION": os.getenv("REDIS_URL"),
+        "LOCATION": 'redis://127.0.0.1:6379/0',
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}

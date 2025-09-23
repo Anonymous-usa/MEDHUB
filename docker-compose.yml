@@ -18,6 +18,13 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: medhub_redis
+    restart: unless-stopped
+    expose:
+      - "6379"  
+
   web:
     build:
       context: .
@@ -26,8 +33,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     expose:
-      - "8000"  # Internal port for NGINX to proxy
+      - "8000"
     volumes:
       - .:/app
       - static_data:/app/staticfiles
