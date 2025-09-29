@@ -7,13 +7,12 @@ from drf_spectacular.views import (
 )
 
 # Кастомная админка MEDHUB.TJ
-from admim_custom.admin_site import admin_site
-from admim_custom import urls as admin_custom_urls
 
+from django.contrib import admin
 urlpatterns = [
     # 🛠 Кастомная админ-панель
-    path("admin/", admin_site.urls),  # заменяет стандартную админку
-    path("admin-panel/", include(admin_custom_urls, namespace="admim_custom")),
+    path("admin/", admin.site.urls),  # заменяет стандартную админку
+    
 
     # 📦 Основные модули API (v1)
     path("api/", include("accounts.urls",      namespace="accounts")),

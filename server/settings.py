@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'channels',
 
-    'admim_custom.apps.AdmimCustomConfig',
     'core.apps.CoreConfig',
     'accounts.apps.AccountsConfig',
     'institutions.apps.InstitutionsConfig',
