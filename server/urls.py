@@ -5,25 +5,21 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
-
-# Кастомная админка MEDHUB.TJ
-
 from django.contrib import admin
+
 urlpatterns = [
     # 🛠 Кастомная админ-панель
-    path("admin/", admin.site.urls),  # заменяет стандартную админку
-    
+    path("admin/", admin.site.urls),
 
     # 📦 Основные модули API (v1)
-    path("api/", include("accounts.urls",      namespace="accounts")),
-    path("api/", include("appointments.urls",  namespace="appointments")),
-    path("api/", include("institutions.urls",  namespace="institutions")),
-    path("api/", include("core.urls",          namespace="core")),
-    path("api/", include("reviews.urls",       namespace="reviews")),
-    path("api/", include("statistics.urls",    namespace="statistics")),
-    path("api/", include("notifications.urls", namespace="notifications")),
-    path("api/", include("message.urls", namespace="message")),
-
+    path("api/v1/", include(("accounts.urls", "accounts"), namespace="accounts")),
+    path("api/v1/", include(("appointments.urls", "appointments"), namespace="appointments")),
+    path("api/v1/", include(("institutions.urls", "institutions"), namespace="institutions")),
+    path("api/v1/", include(("core.urls", "core"), namespace="core")),
+    path("api/v1/", include(("reviews.urls", "reviews"), namespace="reviews")),
+    path("api/v1/", include(("statistics.urls", "statistics"), namespace="statistics")),
+    path("api/v1/", include(("notifications.urls", "notifications"), namespace="notifications")),
+    path("api/v1/", include(("message.urls", "message"), namespace="message")),
 
     # 🔑 JWT — обновление access токена
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -36,8 +32,7 @@ urlpatterns = [
 
     # 📘 ReDoc UI
     path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-    
-    # HTML-интерфейс учреждений
-    path("institutions/", include("institutions.urls", namespace="institutions")),
 
+    # 🌐 HTML-интерфейс учреждений (отдельный от API)
+    path("institutions/", include(("institutions.urls", "institutions"), namespace="institutions-html")),
 ]

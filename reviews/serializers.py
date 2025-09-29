@@ -75,3 +75,12 @@ class ReviewDetailSerializer(serializers.ModelSerializer):
             'patient_name', 'patient_phone',
             'doctor_name', 'doctor_phone'
         )
+
+class ReviewListSerializer(serializers.ModelSerializer):
+    patient_name = serializers.CharField(source="appointment.patient.get_full_name", read_only=True)
+    doctor_name = serializers.CharField(source="appointment.doctor.get_full_name", read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ("id", "patient_name", "doctor_name", "rating", "comment", "created_at")
+

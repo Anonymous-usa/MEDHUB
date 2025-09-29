@@ -1,4 +1,3 @@
-# institutions/permissions.py
 from rest_framework import permissions
 
 
@@ -9,7 +8,7 @@ class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and hasattr(request.user, 'is_super_admin')
+            and callable(getattr(request.user, "is_super_admin", None))
             and request.user.is_super_admin()
         )
 
@@ -24,12 +23,12 @@ class IsInstitutionOwnerOrSuper(permissions.BasePermission):
             return False
 
         # Супер-админ имеет доступ ко всем учреждениям
-        if hasattr(request.user, 'is_super_admin') and request.user.is_super_admin():
+        if callable(getattr(request.user, "is_super_admin", None)) and request.user.is_super_admin():
             return True
 
         # Админ учреждения — только к своему
         return (
-            hasattr(request.user, 'is_institution_admin')
+            callable(getattr(request.user, "is_institution_admin", None))
             and request.user.is_institution_admin()
-            and getattr(request.user, 'institution_id', None) == obj.id
+            and getattr(request.user, "institution_id", None) == obj.id
         )

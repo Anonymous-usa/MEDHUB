@@ -44,17 +44,17 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
     """
     Только для публичного списка и деталки.
     """
+    logo_url = serializers.SerializerMethodField()
+    departments = DepartmentSerializer(many=True, read_only=True)
+    city = CitySerializer(read_only=True)
+    region_name = serializers.CharField(source='city.region.name', read_only=True)
+
     @extend_schema_field(OpenApiTypes.STR)
     def get_logo_url(self, obj):
         request = self.context.get('request')
         if obj.logo and request:
             return request.build_absolute_uri(obj.logo.url)
         return None
-
-    logo_url = serializers.SerializerMethodField()
-    departments = DepartmentSerializer(many=True, read_only=True)
-    city = CitySerializer(read_only=True)
-    region_name = serializers.CharField(source='city.region.name', read_only=True)
 
     class Meta:
         model = Institution
@@ -68,12 +68,18 @@ class InstitutionPublicSerializer(serializers.ModelSerializer):
         )
 
 
-
 class InstitutionRegistrationSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для регистрации нового учреждения.
+    Используется при создании через API.
+    """
     class Meta:
         model = Institution
         fields = [
             'name', 'slug', 'institution_type', 'ownership_type',
-            'region', 'city', 'address', 'phone', 'email',
-            'description',  'is_active', 'is_top'
+            'city', 'address', 'phone', 'email',
+            'description', 'is_active', 'is_top'
         ]
+        extra_kwargs = {
+            'slug': {'required': False},  # slug генерируется автоматически, если не передан
+        }

@@ -2,16 +2,24 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 
+
 class TimeStampedModel(models.Model):
+    """
+    Абстрактная модель с датами создания и обновления.
+    """
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Дата создания'))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Дата обновления'))
 
     class Meta:
         abstract = True
+        ordering = ("-created_at",)
 
 
 class SoftDeleteModel(models.Model):
-    is_active  = models.BooleanField(default=True, verbose_name=_('Активно'))
+    """
+    Абстрактная модель для мягкого удаления.
+    """
+    is_active = models.BooleanField(default=True, verbose_name=_('Активно'))
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name=_('Дата удаления'))
 
     class Meta:
@@ -19,7 +27,10 @@ class SoftDeleteModel(models.Model):
 
 
 class Region(TimeStampedModel, SoftDeleteModel):
-    name = models.CharField(max_length=100, verbose_name=_('Регион'))
+    """
+    Регион (например: Согдийская область, Хатлонская область).
+    """
+    name = models.CharField(max_length=100, unique=True, verbose_name=_('Регион'))
     slug = models.SlugField(unique=True, verbose_name=_('Псевдоним'))
 
     class Meta:
@@ -37,10 +48,15 @@ class Region(TimeStampedModel, SoftDeleteModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        else:
+            self.slug = slugify(self.slug)
         super().save(*args, **kwargs)
 
 
 class City(TimeStampedModel, SoftDeleteModel):
+    """
+    Город, привязанный к региону.
+    """
     region = models.ForeignKey(
         Region,
         related_name='cities',
@@ -48,7 +64,7 @@ class City(TimeStampedModel, SoftDeleteModel):
         verbose_name=_('Регион')
     )
     name = models.CharField(max_length=100, verbose_name=_('Город'))
-    slug = models.SlugField(unique=True, verbose_name=_('Псевдоним'))
+    slug = models.SlugField(verbose_name=_('Псевдоним'))
 
     class Meta:
         unique_together = ('region', 'name')
@@ -66,4 +82,6 @@ class City(TimeStampedModel, SoftDeleteModel):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+        else:
+            self.slug = slugify(self.slug)
         super().save(*args, **kwargs)

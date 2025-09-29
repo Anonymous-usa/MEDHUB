@@ -1,33 +1,26 @@
-import logging
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
-from accounts.validators import validate_phone_number
 
 User = get_user_model()
-logger = logging.getLogger(__name__)
 
 class PhoneNumberBackend(ModelBackend):
-    def authenticate(self, request, phone_number=None, password=None, **kwargs):
-        if phone_number is None or password is None:
+    """
+    Аутентификация по phone_number вместо username.
+    """
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        phone = kwargs.get('phone_number') or username
+        if not phone or not password:
             return None
-
-        phone_number = validate_phone_number(phone_number)
-
         try:
-            user = User.objects.get(phone_number=phone_number)
+            user = User.objects.get(phone_number=phone)
         except User.DoesNotExist:
-            logger.warning(f"Пользователь не найден: {phone_number}")
             return None
+        if user.check_password(password):
+            return user
+        return None
 
-        if not user.check_password(password):
-            logger.warning(f"Неверный пароль для: {phone_number}")
+    def get_user(self, user_id):
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
             return None
-        if not user.is_active:
-            logger.warning(f"Аккаунт деактивирован: {phone_number}")
-            return None
-        if hasattr(user, 'is_verified') and not user.is_verified:
-            logger.warning(f"Аккаунт не верифицирован: {phone_number}")
-            return None
-
-        logger.info(f"Аутентификация успешна: {user.phone_number}")
-        return user

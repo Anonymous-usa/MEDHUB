@@ -1,20 +1,22 @@
-# institutions/models.py
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from core.models import TimeStampedModel, SoftDeleteModel
+from core.models import TimeStampedModel, SoftDeleteModel, City
 from core.utils import generate_unique_slug
-from core.models import City
 
 
 class Institution(TimeStampedModel, SoftDeleteModel):
+    """
+    Медицинское учреждение (больница, клиника, лаборатория и т.д.)
+    """
+
     class InstitutionType(models.TextChoices):
-        HOSPITAL    = 'hospital',    _('Больница')
-        CLINIC      = 'clinic',      _('Клиника')
-        LABORATORY  = 'laboratory',  _('Лаборатория')
-        OTHER       = 'other',       _('Другое')
+        HOSPITAL = 'hospital', _('Больница')
+        CLINIC = 'clinic', _('Клиника')
+        LABORATORY = 'laboratory', _('Лаборатория')
+        OTHER = 'other', _('Другое')
 
     class OwnershipType(models.TextChoices):
-        STATE   = 'state',   _('Государственное')
+        STATE = 'state', _('Государственное')
         PRIVATE = 'private', _('Частное')
 
     name = models.CharField(max_length=255, verbose_name=_('Название'))
@@ -68,24 +70,28 @@ class Institution(TimeStampedModel, SoftDeleteModel):
             models.Index(fields=['institution_type']),
         ]
 
-    def str(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, self.name)
+        else:
+            self.slug = generate_unique_slug(self, self.slug)
         super().save(*args, **kwargs)
 
     @property
     def region(self):
         """
-        Returns the region of the related City, if available.
-        Useful for displaying in Django Admin.
+        Возвращает регион, связанный с городом учреждения (если есть).
         """
         return getattr(self.city, "region", None)
 
 
 class Department(TimeStampedModel, SoftDeleteModel):
+    """
+    Отделение внутри учреждения (например: кардиология, лаборатория).
+    """
     institution = models.ForeignKey(
         Institution,
         related_name='departments',
@@ -104,5 +110,5 @@ class Department(TimeStampedModel, SoftDeleteModel):
             models.Index(fields=['is_active']),
         ]
 
-    def str(self):
+    def __str__(self):
         return f"{self.institution.name} — {self.name}"
