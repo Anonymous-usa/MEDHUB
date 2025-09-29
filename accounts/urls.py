@@ -1,18 +1,10 @@
 from django.urls import path
-from .views import (
-    PatientRegistrationView,
-    LoginView,
-    UserProfileView,
-    LogoutView,
-    DoctorRegistrationView
-)
+from .views import LoginView, RegisterView, ProfileView
 
 app_name = 'accounts'
 
 urlpatterns = [
-    path('v1/register/patient/', PatientRegistrationView.as_view(), name='patient-register'),
-    path('v1/login/',           LoginView.as_view(),              name='login'),
-    path('v1/profile/',         UserProfileView.as_view(),        name='user-profile'),
-    path('v1/logout/',          LogoutView.as_view(),             name='logout'),
-    path('v1/register/doctor/', DoctorRegistrationView.as_view(), name='doctor-register'),
+    path('v1/auth/login/', LoginView.as_view(), name='login'),       # 🔑 Логин
+    path('v1/auth/register/', RegisterView.as_view(), name='register'),  # 🆕 Регистрация
+    path('v1/auth/me/', ProfileView.as_view(), name='me'),           # 👤 Профиль
 ]

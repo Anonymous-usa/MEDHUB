@@ -7,17 +7,22 @@ from .models import Notification
 from .serializers import NotificationSerializer
 from .permissions import IsRecipient
 
-# 🔧 Swagger helper serializers (renamed to avoid collisions)
+
+# 🔧 Swagger helper serializers
 class NotificationMarkedCountSerializer(serializers.Serializer):
     marked_count = serializers.IntegerField()
+
 
 class NotificationErrorSerializer(serializers.Serializer):
     error = serializers.CharField()
 
 
 @extend_schema(
-    responses={200: NotificationSerializer},
-    description="Список уведомлений текущего пользователя"
+    tags=["Notifications"],
+    summary="Список уведомлений",
+    description="Возвращает список всех уведомлений текущего пользователя. "
+                "Можно фильтровать по статусу (?is_read=true/false).",
+    responses={200: NotificationSerializer(many=True)},
 )
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
@@ -26,18 +31,28 @@ class NotificationListView(generics.ListAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Notification.objects.none()
-        return (
-            Notification.objects
-            .select_related('actor', 'recipient')
-            .filter(recipient=self.request.user)
-            .order_by('-created_at')
+
+        qs = Notification.objects.select_related("actor", "recipient").filter(
+            recipient=self.request.user
         )
+
+        is_read = self.request.query_params.get("is_read")
+        if is_read is not None:
+            qs = qs.filter(is_read=is_read.lower() in ["true", "1"])
+
+        return qs.order_by("-created_at")
 
 
 @extend_schema(
+    tags=["Notifications"],
+    summary="Пометить уведомление как прочитанное",
+    description="Помечает одно уведомление как прочитанное. Доступно только получателю.",
     request=None,
-    responses={200: NotificationSerializer, 403: NotificationErrorSerializer, 404: NotificationErrorSerializer},
-    description="Пометить одно уведомление прочитанным"
+    responses={
+        200: NotificationSerializer,
+        403: NotificationErrorSerializer,
+        404: NotificationErrorSerializer,
+    },
 )
 class NotificationMarkReadView(generics.UpdateAPIView):
     serializer_class = NotificationSerializer
@@ -48,7 +63,7 @@ class NotificationMarkReadView(generics.UpdateAPIView):
         notification = self.get_object()
         if not notification.is_read:
             notification.is_read = True
-            notification.save(update_fields=['is_read', 'updated_at'])
+            notification.save(update_fields=["is_read", "updated_at"])
         return Response(
             self.get_serializer(notification).data,
             status=status.HTTP_200_OK
@@ -56,9 +71,11 @@ class NotificationMarkReadView(generics.UpdateAPIView):
 
 
 @extend_schema(
+    tags=["Notifications"],
+    summary="Пометить все уведомления прочитанными",
+    description="Массовая отметка всех уведомлений текущего пользователя как прочитанных.",
     request=None,
     responses={200: NotificationMarkedCountSerializer},
-    description="Пометить все уведомления текущего пользователя прочитанными"
 )
 class NotificationMarkAllReadView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]

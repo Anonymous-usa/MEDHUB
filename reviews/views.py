@@ -3,10 +3,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 from .models import Review
-from .serializers import ReviewCreateSerializer, ReviewDetailSerializer
+from .serializers import (
+    ReviewCreateSerializer,
+    ReviewDetailSerializer,
+    ReviewListSerializer,
+)
 from .permissions import IsPatient
 
-# 🔧 Renamed Swagger helper serializer
+
+# 🔧 Swagger helper serializer
 class ReviewPostSuccessSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     detail = serializers.CharField()
@@ -14,16 +19,23 @@ class ReviewPostSuccessSerializer(serializers.Serializer):
 
 @extend_schema_view(
     get=extend_schema(
-        responses={200: ReviewDetailSerializer},
-        description="Список отзывов текущего пациента"
+        tags=["Reviews"],
+        summary="Список отзывов пациента",
+        description="Возвращает список всех отзывов текущего пациента.",
+        responses={200: ReviewListSerializer(many=True)},
     ),
     post=extend_schema(
+        tags=["Reviews"],
+        summary="Создать отзыв",
+        description="Создание нового отзыва по принятой заявке. Доступно только пациенту.",
         request=ReviewCreateSerializer,
         responses={201: ReviewDetailSerializer},
-        description="Создание нового отзыва по принятой заявке"
     )
 )
 class PatientReviewListCreateView(generics.ListCreateAPIView):
+    """
+    Пациент может просматривать свои отзывы и создавать новые.
+    """
     permission_classes = [IsAuthenticated, IsPatient]
 
     def get_queryset(self):
@@ -41,17 +53,18 @@ class PatientReviewListCreateView(generics.ListCreateAPIView):
         )
 
     def get_serializer_class(self):
-        return (
-            ReviewCreateSerializer
-            if self.request.method == "POST"
-            else ReviewDetailSerializer
-        )
+        if self.request.method == "POST":
+            return ReviewCreateSerializer
+        return ReviewListSerializer
 
     def get_serializer_context(self):
         return {"request": self.request}
 
 
 @extend_schema(
+    tags=["Reviews"],
+    summary="Отзывы врача",
+    description="Возвращает список отзывов для конкретного врача по его ID. Доступно всем пользователям.",
     parameters=[
         OpenApiParameter(
             name="doctor_id",
@@ -61,12 +74,14 @@ class PatientReviewListCreateView(generics.ListCreateAPIView):
             description="ID врача"
         )
     ],
-    responses={200: ReviewDetailSerializer},
-    description="Список отзывов для конкретного врача"
+    responses={200: ReviewListSerializer(many=True)},
 )
 class DoctorReviewListView(generics.ListAPIView):
+    """
+    Любой пользователь может просматривать отзывы конкретного врача.
+    """
     permission_classes = [AllowAny]
-    serializer_class = ReviewDetailSerializer
+    serializer_class = ReviewListSerializer
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
