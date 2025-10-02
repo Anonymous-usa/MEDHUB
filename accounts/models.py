@@ -8,13 +8,14 @@ from .validators import validate_phone_number
 
 
 class User(AbstractUser):
+    username = None  # ❌ Remove username field
+
     class UserType(models.TextChoices):
         ADMIN = 'admin', _('Institution Admin')
         DOCTOR = 'doctor', _('Doctor')
         PATIENT = 'patient', _('Patient')
         STAFF = 'staff', _('Staff')
 
-    # Логин по телефону
     phone_number = models.CharField(
         max_length=32,
         unique=True,
@@ -23,14 +24,12 @@ class User(AbstractUser):
         help_text=_('E.164 format preferred (+992...)')
     )
 
-    # Ролевая принадлежность
     user_type = models.CharField(
         max_length=16,
         choices=UserType.choices,
         verbose_name=_('User type')
     )
 
-    # Привязка к учреждению (для админов/врачей/персонала)
     institution = models.ForeignKey(
         Institution,
         on_delete=models.SET_NULL,
@@ -40,23 +39,21 @@ class User(AbstractUser):
         verbose_name=_('Institution'),
     )
 
-    # Глобальная супер‑админ роль
     is_super_admin_flag = models.BooleanField(
         default=False,
         verbose_name=_('Is super admin'),
         help_text=_('System-wide super admin with full access')
     )
 
-    # Подключаем кастомный менеджер
     objects = CustomUserManager()
 
-    REQUIRED_FIELDS = ['phone_number', 'email', 'user_type']
+    USERNAME_FIELD = 'phone_number'  # ✅ Set phone_number as login field
+    REQUIRED_FIELDS = ['email', 'user_type']  # ✅ phone_number is now implicit
 
     def get_full_name(self):
         full = f"{self.first_name} {self.last_name}".strip()
-        return full or self.username
+        return full or self.phone_number
 
-    # Централизованные ролевые методы
     def is_super_admin(self) -> bool:
         return bool(self.is_super_admin_flag)
 
