@@ -49,6 +49,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+
         extra_fields.setdefault('user_type', self.model.UserType.SUPERUSER)
         extra_fields.setdefault('is_super_admin_flag', True)
 

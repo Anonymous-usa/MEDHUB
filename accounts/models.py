@@ -16,6 +16,7 @@ class User(AbstractUser):
         DOCTOR = 'doctor', _('Doctor')
         PATIENT = 'patient', _('Patient')
         STAFF = 'staff', _('Staff')
+        is_verified = models.BooleanField(default=True)
 
     phone_number = models.CharField(
         max_length=32,
