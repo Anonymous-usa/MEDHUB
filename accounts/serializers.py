@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'username', 'phone_number', 'email',
+            'id', 'phone_number', 'email',
             'first_name', 'last_name', 'full_name',
             'user_type', 'institution', 'is_super_admin_flag',
             'date_joined', 'last_login',
@@ -20,17 +20,41 @@ class UserSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return obj.get_full_name()
 
+class LoginRequestSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
+
     class Meta:
         model = User
-        fields = ('username', 'phone_number', 'email', 'first_name', 'last_name', 'user_type', 'institution', 'password')
+        fields = (
+            'phone_number', 'email', 'first_name', 'last_name',
+            'user_type', 'institution', 'password'
+        )
 
-    def validate_user_type(self, value):
-        allowed = {User.UserType.DOCTOR, User.UserType.PATIENT, User.UserType.ADMIN}
-        if value not in allowed:
-            raise serializers.ValidationError(_('Недопустимый тип пользователя'))
-        return value
+    def validate(self, attrs):
+        user_type = attrs.get('user_type')
+        institution = attrs.get('institution')
+
+        if user_type == User.UserType.ADMIN and not institution:
+            raise serializers.ValidationError({
+                'institution': _('Администратор учреждения должен быть привязан к institution')
+            })
+
+        if user_type == User.UserType.PATIENT and institution:
+            raise serializers.ValidationError({
+                'institution': _('Пациент не может быть привязан к institution')
+            })
+
+        if user_type == User.UserType.SUPERUSER:
+            raise serializers.ValidationError({
+                'user_type': _('Нельзя создать суперпользователя через обычную регистрацию')
+            })
+
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -38,3 +62,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+

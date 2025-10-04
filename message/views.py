@@ -8,6 +8,7 @@ from accounts.models import User
 from .models import Message
 from .serializers import MessageSerializer
 import logging
+from rest_framework.parsers import MultiPartParser, FormParser
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,7 @@ class DialogListView(generics.ListAPIView):
 class ChatView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):

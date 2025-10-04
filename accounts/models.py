@@ -11,6 +11,7 @@ class User(AbstractUser):
     username = None  # ❌ Remove username field
 
     class UserType(models.TextChoices):
+        SUPERUSER = "super_user", _("Super User")
         ADMIN = 'admin', _('Institution Admin')
         DOCTOR = 'doctor', _('Doctor')
         PATIENT = 'patient', _('Patient')

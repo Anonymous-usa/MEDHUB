@@ -14,7 +14,7 @@ urlpatterns = [
     # 📦 Основные модули API (v1)
     path("api/v1/", include(("accounts.urls", "accounts"), namespace="accounts")),
     path("api/v1/", include(("appointments.urls", "appointments"), namespace="appointments")),
-    path("api/v1/", include(("institutions.urls", "institutions"), namespace="institutions")),
+    
     path("api/v1/", include(("core.urls", "core"), namespace="core")),
     path("api/v1/", include(("reviews.urls", "reviews"), namespace="reviews")),
     path("api/v1/", include(("statistics.urls", "statistics"), namespace="statistics")),

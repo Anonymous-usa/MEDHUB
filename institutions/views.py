@@ -1,17 +1,11 @@
 import logging
-from rest_framework import viewsets, filters, status, permissions
+from rest_framework import viewsets, filters, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from .models import Institution, Department
-from .serializers import (
-    InstitutionAdminSerializer,
-    InstitutionPublicSerializer,
-    InstitutionRegistrationSerializer,
-)
+from .serializers import InstitutionAdminSerializer, InstitutionPublicSerializer
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 
 logger = logging.getLogger(__name__)
@@ -94,38 +88,3 @@ class InstitutionViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         logger.warning(f"Учреждение удалено: {instance.name} ({instance.slug})")
         instance.delete()
-
-
-class IsSuperAdminOrSuperUser(permissions.BasePermission):
-    """
-    Доступ для супер-админа или суперпользователя Django.
-    """
-    def has_permission(self, request, view):
-        return (
-            request.user
-            and request.user.is_authenticated
-            and (request.user.is_superuser or request.user.is_super_admin())
-        )
-
-
-@extend_schema(
-    tags=["Institutions"],
-    summary="Регистрация нового учреждения",
-    description="Создаёт новое медицинское учреждение через отдельный эндпоинт. Доступно только супер‑админу или суперпользователю.",
-    request=InstitutionRegistrationSerializer,
-    responses={201: InstitutionRegistrationSerializer},
-)
-class InstitutionRegistrationView(APIView):
-    """
-    Отдельная ручка для регистрации учреждения (через API).
-    """
-    permission_classes = [IsSuperAdminOrSuperUser]
-
-    def post(self, request):
-        serializer = InstitutionRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            institution = serializer.save()
-            logger.info(f"Учреждение зарегистрировано: {institution.name}")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        logger.warning(f"Ошибка регистрации учреждения: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
