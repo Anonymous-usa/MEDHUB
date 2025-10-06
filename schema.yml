@@ -4,18 +4,229 @@ info:
   version: 1.0.0
   description: Централизованная медицинская платформа для Таджикистана
 paths:
-  /api/v1/chat/{user_id}/:
+  /api/v1/token/refresh/:
+    post:
+      operationId: api_v1_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/v1/appointments/{id}/status/:
+    put:
+      operationId: api_v1_v1_appointments_status_update
+      description: Врач может принять или отклонить заявку. Супер‑админ имеет право
+        обновить любую заявку.
+      summary: Обновление статуса заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentError'
+          description: ''
+    patch:
+      operationId: api_v1_v1_appointments_status_partial_update
+      description: Врач может принять или отклонить заявку. Супер‑админ имеет право
+        обновить любую заявку.
+      summary: Обновление статуса заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentError'
+          description: ''
+  /api/v1/v1/auth/login/:
+    post:
+      operationId: api_v1_v1_auth_login_create
+      description: Авторизация пользователя по номеру телефона и паролю. Возвращает
+        пару токенов (access и refresh).
+      summary: Логин по номеру телефона
+      tags:
+      - Accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneTokenObtainPair'
+          description: ''
+  /api/v1/v1/auth/me/:
     get:
-      operationId: v1_chat_list
-      description: Получение сообщений между текущим пользователем и другим
+      operationId: api_v1_v1_auth_me_retrieve
+      description: Возвращает данные профиля текущего авторизованного пользователя.
+      summary: Профиль текущего пользователя
+      tags:
+      - Accounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: api_v1_v1_auth_me_partial_update
+      description: Позволяет частично обновить данные профиля текущего пользователя.
+        Нельзя изменить роль, принадлежность к учреждению или статус супер-админа.
+      summary: Обновление профиля
+      tags:
+      - Accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/v1/auth/register/:
+    post:
+      operationId: api_v1_v1_auth_register_create
+      description: Создаёт нового пользователя в системе. Доступно без авторизации.
+      summary: Регистрация нового пользователя
+      tags:
+      - Accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/v1/chat/{user_id}/:
+    get:
+      operationId: api_v1_v1_chat_list
+      description: Возвращает историю сообщений между текущим пользователем и другим
+        пользователем.
+      summary: История переписки
       parameters:
       - in: path
         name: user_id
         schema:
           type: integer
+        description: ID второго пользователя в чате
         required: true
       tags:
-      - v1
+      - Messages
       security:
       - jwtAuth: []
       responses:
@@ -28,8 +239,10 @@ paths:
                   $ref: '#/components/schemas/Message'
           description: ''
     post:
-      operationId: v1_chat_create
-      description: Отправка сообщения другому пользователю
+      operationId: api_v1_v1_chat_create
+      description: Отправка нового сообщения другому пользователю. Чат разрешён только
+        между доктором и пациентом.
+      summary: Отправить сообщение
       parameters:
       - in: path
         name: user_id
@@ -37,16 +250,13 @@ paths:
           type: integer
         required: true
       tags:
-      - v1
+      - Messages
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: '#/components/schemas/MessageRequest'
           application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/MessageRequest'
-          multipart/form-data:
             schema:
               $ref: '#/components/schemas/MessageRequest'
         required: true
@@ -63,14 +273,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/MessageError'
           description: ''
-  /api/v1/dialogs/:
+  /api/v1/v1/dialogs/:
     get:
-      operationId: v1_dialogs_list
-      description: Список последних сообщений по каждому диалогу
+      operationId: api_v1_v1_dialogs_list
+      description: Возвращает список последних сообщений в диалогах текущего пользователя.
+        Для каждой уникальной пары (sender, receiver) берётся только последнее сообщение.
+      summary: Список диалогов
       tags:
-      - v1
+      - Messages
       security:
       - jwtAuth: []
       responses:
@@ -82,12 +294,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/Message'
           description: ''
-  /api/v1/doctor/appointments/:
+  /api/v1/v1/doctor/appointments/:
     get:
-      operationId: v1_doctor_appointments_list
-      description: Список входящих заявок врача
+      operationId: api_v1_v1_doctor_appointments_list
+      description: Возвращает список входящих заявок для текущего врача (только ожидающие).
+      summary: Список заявок врача
       tags:
-      - v1
+      - Appointments
       security:
       - jwtAuth: []
       responses:
@@ -99,82 +312,21 @@ paths:
                 items:
                   $ref: '#/components/schemas/AppointmentRequestDetail'
           description: ''
-  /api/v1/doctor/appointments/{id}/status/:
-    put:
-      operationId: v1_doctor_appointments_status_update
-      description: Обновление статуса заявки
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AppointmentStatusUpdateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppointmentRequestDetail'
-          description: ''
-    patch:
-      operationId: v1_doctor_appointments_status_partial_update
-      description: Обновление статуса заявки
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedAppointmentStatusUpdateRequest'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppointmentRequestDetail'
-          description: ''
-  /api/v1/doctors/{doctor_id}/reviews/:
+  /api/v1/v1/doctors/{doctor_id}/reviews/:
     get:
-      operationId: v1_doctors_reviews_list
-      description: Список отзывов для конкретного врача
+      operationId: api_v1_v1_doctors_reviews_list
+      description: Возвращает список отзывов для конкретного врача по его ID. Доступно
+        всем пользователям.
+      summary: Отзывы врача
       parameters:
       - in: path
         name: doctor_id
         schema:
           type: integer
+        description: ID врача
         required: true
       tags:
-      - v1
+      - Reviews
       security:
       - jwtAuth: []
       - {}
@@ -185,12 +337,315 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReviewDetail'
+                  $ref: '#/components/schemas/ReviewList'
           description: ''
-  /api/v1/institutions/:
+  /api/v1/v1/messages/{id}/read/:
+    patch:
+      operationId: api_v1_v1_messages_read_partial_update
+      description: Помечает сообщение как прочитанное, если оно адресовано текущему
+        пользователю.
+      summary: Пометить сообщение как прочитанное
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Messages
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageStatus'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageError'
+          description: ''
+  /api/v1/v1/notifications/:
     get:
-      operationId: v1_institutions_list
-      description: Публичный список учреждений
+      operationId: api_v1_v1_notifications_list
+      description: Возвращает список всех уведомлений текущего пользователя. Можно
+        фильтровать по статусу (?is_read=true/false).
+      summary: Список уведомлений
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/v1/notifications/{id}/read/:
+    put:
+      operationId: api_v1_v1_notifications_read_update
+      description: Помечает одно уведомление как прочитанное. Доступно только получателю.
+      summary: Пометить уведомление как прочитанное
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationError'
+          description: ''
+    patch:
+      operationId: api_v1_v1_notifications_read_partial_update
+      description: Помечает одно уведомление как прочитанное. Доступно только получателю.
+      summary: Пометить уведомление как прочитанное
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationError'
+          description: ''
+  /api/v1/v1/notifications/mark-all-read/:
+    post:
+      operationId: api_v1_v1_notifications_mark_all_read_create
+      description: Массовая отметка всех уведомлений текущего пользователя как прочитанных.
+      summary: Пометить все уведомления прочитанными
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationMarkedCount'
+          description: ''
+  /api/v1/v1/patient/appointments/:
+    get:
+      operationId: api_v1_v1_patient_appointments_list
+      description: Возвращает список активных заявок текущего пациента.
+      summary: Список заявок пациента
+      tags:
+      - Appointments
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentRequestDetail'
+          description: ''
+    post:
+      operationId: api_v1_v1_patient_appointments_create
+      description: Пациент создаёт новую заявку на приём к врачу.
+      summary: Создать заявку на приём
+      tags:
+      - Appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentError'
+          description: ''
+  /api/v1/v1/patient/reviews/:
+    get:
+      operationId: api_v1_v1_patient_reviews_list
+      description: Возвращает список всех отзывов текущего пациента.
+      summary: Список отзывов пациента
+      tags:
+      - Reviews
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReviewList'
+          description: ''
+    post:
+      operationId: api_v1_v1_patient_reviews_create
+      description: Создание нового отзыва по принятой заявке. Доступно только пациенту.
+      summary: Создать отзыв
+      tags:
+      - Reviews
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReviewCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewDetail'
+          description: ''
+  /api/v1/v1/regions/:
+    get:
+      operationId: api_v1_v1_regions_list
+      description: Возвращает публичный список всех активных регионов Таджикистана.
+      summary: Список регионов
+      tags:
+      - Core
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Region'
+          description: ''
+  /api/v1/v1/regions/{region_slug}/cities/:
+    get:
+      operationId: api_v1_v1_regions_cities_list
+      description: Возвращает список всех активных городов выбранного региона по его
+        slug.
+      summary: Список городов региона
+      parameters:
+      - in: path
+        name: region_slug
+        schema:
+          type: string
+        description: 'Slug региона (например: dushanbe, sughd)'
+        required: true
+      tags:
+      - Core
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+          description: ''
+  /api/v1/v1/stats/institution/{id}/:
+    get:
+      operationId: api_v1_v1_stats_institution_retrieve
+      description: Возвращает статистику по конкретному учреждению. Доступно супер‑админу
+        и администратору учреждения.
+      summary: Статистика по учреждению
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
+        description: ID учреждения
+        required: true
+      tags:
+      - Statistics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionSpecificStats'
+          description: ''
+  /institutions/v1/institutions/:
+    get:
+      operationId: institutions_v1_institutions_list
+      description: Возвращает публичный список всех активных учреждений.
+      summary: Список учреждений
       parameters:
       - in: query
         name: city
@@ -237,7 +692,7 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - Institutions
       security:
       - jwtAuth: []
       - {}
@@ -251,10 +706,11 @@ paths:
                   $ref: '#/components/schemas/InstitutionPublic'
           description: ''
     post:
-      operationId: v1_institutions_create
-      description: Создание учреждения (только супер-админ)
+      operationId: institutions_v1_institutions_create
+      description: Создаёт новое учреждение. Доступно только супер‑админу.
+      summary: Создать учреждение
       tags:
-      - v1
+      - Institutions
       requestBody:
         content:
           application/json:
@@ -276,10 +732,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstitutionAdmin'
           description: ''
-  /api/v1/institutions/{id}/:
+  /institutions/v1/institutions/{id}/:
     get:
-      operationId: v1_institutions_retrieve
-      description: Публичная информация об учреждении
+      operationId: institutions_v1_institutions_retrieve
+      description: Возвращает публичную информацию об учреждении по ID.
+      summary: Информация об учреждении
       parameters:
       - in: path
         name: id
@@ -288,7 +745,7 @@ paths:
         description: A unique integer value identifying this Учреждение.
         required: true
       tags:
-      - v1
+      - Institutions
       security:
       - jwtAuth: []
       - {}
@@ -300,8 +757,10 @@ paths:
                 $ref: '#/components/schemas/InstitutionPublic'
           description: ''
     put:
-      operationId: v1_institutions_update
-      description: Обновление учреждения (админ или супер-админ)
+      operationId: institutions_v1_institutions_update
+      description: Обновление данных учреждения. Доступно администратору учреждения
+        или супер‑админу.
+      summary: Обновить учреждение
       parameters:
       - in: path
         name: id
@@ -310,7 +769,7 @@ paths:
         description: A unique integer value identifying this Учреждение.
         required: true
       tags:
-      - v1
+      - Institutions
       requestBody:
         content:
           application/json:
@@ -333,8 +792,10 @@ paths:
                 $ref: '#/components/schemas/InstitutionAdmin'
           description: ''
     patch:
-      operationId: v1_institutions_partial_update
-      description: Частичное обновление учреждения
+      operationId: institutions_v1_institutions_partial_update
+      description: Частичное обновление данных учреждения. Доступно администратору
+        учреждения или супер‑админу.
+      summary: Частичное обновление учреждения
       parameters:
       - in: path
         name: id
@@ -343,7 +804,7 @@ paths:
         description: A unique integer value identifying this Учреждение.
         required: true
       tags:
-      - v1
+      - Institutions
       requestBody:
         content:
           application/json:
@@ -365,8 +826,9 @@ paths:
                 $ref: '#/components/schemas/InstitutionAdmin'
           description: ''
     delete:
-      operationId: v1_institutions_destroy
-      description: Удаление учреждения (только супер-админ)
+      operationId: institutions_v1_institutions_destroy
+      description: Удаление учреждения. Доступно только супер‑админу.
+      summary: Удалить учреждение
       parameters:
       - in: path
         name: id
@@ -375,477 +837,30 @@ paths:
         description: A unique integer value identifying this Учреждение.
         required: true
       tags:
-      - v1
+      - Institutions
       security:
       - jwtAuth: []
       responses:
         '204':
           description: No response body
-  /api/v1/login/:
-    post:
-      operationId: v1_login_create
-      description: Аутентификация пользователя
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-  /api/v1/logout/:
-    post:
-      operationId: v1_logout_create
-      description: Выход из системы
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LogoutRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/LogoutRequestRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/LogoutRequestRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-  /api/v1/messages/{id}/read/:
-    patch:
-      operationId: v1_messages_read_partial_update
-      description: Пометить сообщение как прочитанное
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Status'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-  /api/v1/notifications/:
-    get:
-      operationId: v1_notifications_list
-      description: Список уведомлений текущего пользователя
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Notification'
-          description: ''
-  /api/v1/notifications/{id}/read/:
-    put:
-      operationId: v1_notifications_read_update
-      description: Пометить одно уведомление прочитанным
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Notification'
-          description: ''
-    patch:
-      operationId: v1_notifications_read_partial_update
-      description: Пометить одно уведомление прочитанным
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Notification'
-          description: ''
-  /api/v1/notifications/read-all/:
-    post:
-      operationId: v1_notifications_read_all_create
-      description: Пометить все уведомления текущего пользователя прочитанными
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MarkedCount'
-          description: ''
-  /api/v1/patient/appointments/:
-    get:
-      operationId: v1_patient_appointments_list
-      description: Список заявок пациента
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AppointmentRequestDetail'
-          description: ''
-    post:
-      operationId: v1_patient_appointments_create
-      description: Создание заявки на приём
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AppointmentRequestCreateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-          description: ''
-  /api/v1/patient/reviews/:
-    get:
-      operationId: v1_patient_reviews_list
-      description: Список отзывов текущего пациента
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReviewDetail'
-          description: ''
-    post:
-      operationId: v1_patient_reviews_create
-      description: Создание нового отзыва по принятой заявке
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReviewCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ReviewCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ReviewCreateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReviewDetail'
-          description: ''
-  /api/v1/profile/:
-    get:
-      operationId: v1_profile_retrieve
-      description: Получение профиля текущего пользователя
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-          description: ''
-    put:
-      operationId: v1_profile_update
-      description: Обновление профиля пациента
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserProfileRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserProfileRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserProfileRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-  /api/v1/regions/:
-    get:
-      operationId: v1_regions_list
-      description: Публичный список активных регионов Таджикистана
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Region'
-          description: ''
-  /api/v1/regions/{region_slug}/cities/:
-    get:
-      operationId: v1_regions_cities_list
-      description: Список активных городов в выбранном регионе
-      parameters:
-      - in: path
-        name: region_slug
-        schema:
-          type: string
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/City'
-          description: ''
-  /api/v1/register/patient/:
-    post:
-      operationId: v1_register_patient_create
-      description: Регистрация нового пациента
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatientRegistrationRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatientRegistrationRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatientRegistrationRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: ''
-  /api/v1/stats/institution/{id}/:
-    get:
-      operationId: v1_stats_institution_retrieve
-      description: Статистика по конкретному учреждению (для супер-админа и админа
-        учреждения)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InstitutionStats'
-          description: ''
-  /api/v1/stats/overview/:
-    get:
-      operationId: v1_stats_overview_retrieve
-      description: Общая статистика по системе (только для супер-админа)
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OverviewStats'
-          description: ''
-  /api/v1/token/refresh/:
-    post:
-      operationId: v1_token_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenRefresh'
-          description: ''
 components:
   schemas:
+    AppointmentError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
     AppointmentRequestCreateRequest:
       type: object
+      description: |-
+        Создание новой заявки на приём.
+        Пациент указывается автоматически из request.user.
       properties:
         doctor:
           type: integer
+          title: Врач
         note:
           type: string
           title: Комментарий пациента
@@ -853,11 +868,18 @@ components:
       - doctor
     AppointmentRequestDetail:
       type: object
+      description: Детальное отображение заявки.
       properties:
         id:
           type: integer
           readOnly: true
+        patient_name:
+          type: string
+          readOnly: true
         patient_phone:
+          type: string
+          readOnly: true
+        doctor_name:
           type: string
           readOnly: true
         doctor_phone:
@@ -868,9 +890,14 @@ components:
           title: Комментарий пациента
         status:
           allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          - $ref: '#/components/schemas/Status7f4Enum'
           readOnly: true
           title: Статус заявки
+        appointment_time:
+          type: string
+          format: date-time
+          nullable: true
+          title: Время приёма
         created_at:
           type: string
           format: date-time
@@ -883,21 +910,31 @@ components:
           title: Обновлена
       required:
       - created_at
+      - doctor_name
       - doctor_phone
       - id
+      - patient_name
       - patient_phone
       - status
       - updated_at
     AppointmentStatusUpdateRequest:
       type: object
+      description: Обновление статуса заявки (врач/админ).
       properties:
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/Status7f4Enum'
       required:
       - status
+    AppointmentSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
     City:
       type: object
-      description: Сериализатор города с вложенным регионом.
+      description: Сериализатор города с вложенными данными региона.
       properties:
         id:
           type: integer
@@ -911,26 +948,20 @@ components:
           title: Псевдоним
           maxLength: 50
           pattern: ^[-a-zA-Z0-9_]+$
-        region:
-          type: integer
-          title: Регион
         region_name:
           type: string
           readOnly: true
         region_slug:
           type: string
           readOnly: true
-          pattern: ^[-a-zA-Z0-9_]+$
       required:
       - id
       - name
-      - region
       - region_name
       - region_slug
       - slug
     Department:
       type: object
-      description: Сериализатор отделения учреждения.
       properties:
         id:
           type: integer
@@ -947,7 +978,6 @@ components:
       - name
     DepartmentRequest:
       type: object
-      description: Сериализатор отделения учреждения.
       properties:
         name:
           type: string
@@ -959,18 +989,8 @@ components:
           title: Описание
       required:
       - name
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-      required:
-      - error
     InstitutionAdmin:
       type: object
-      description: |-
-        Для операций super_admin и institution_admin.
-        Полный набор данных + отделения (read-only).
       properties:
         id:
           type: integer
@@ -1071,9 +1091,6 @@ components:
       - updated_at
     InstitutionAdminRequest:
       type: object
-      description: |-
-        Для операций super_admin и institution_admin.
-        Полный набор данных + отделения (read-only).
       properties:
         name:
           type: string
@@ -1148,7 +1165,6 @@ components:
       - slug
     InstitutionPublic:
       type: object
-      description: Только для публичного списка и деталки.
       properties:
         id:
           type: integer
@@ -1228,10 +1244,18 @@ components:
       - phone
       - region_name
       - slug
-    InstitutionStats:
+    InstitutionSpecificStats:
       type: object
       description: Показатели по конкретному учреждению.
       properties:
+        period_start:
+          type: string
+          format: date
+          title: Начало периода
+        period_end:
+          type: string
+          format: date
+          title: Конец периода
         institution_id:
           type: integer
           title: ID учреждения
@@ -1250,10 +1274,18 @@ components:
         rejected_requests:
           type: integer
           title: Отклонённые заявки
+        avg_rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          title: Средний рейтинг
+          description: Средняя оценка врачей учреждения
       required:
       - accepted_requests
       - institution_id
       - name
+      - period_end
+      - period_start
       - rejected_requests
       - total_doctors
       - total_requests
@@ -1269,7 +1301,7 @@ components:
         * `clinic` - Клиника
         * `laboratory` - Лаборатория
         * `other` - Другое
-    LoginRequest:
+    LoginRequestRequest:
       type: object
       properties:
         phone_number:
@@ -1282,21 +1314,6 @@ components:
       required:
       - password
       - phone_number
-    LogoutRequestRequest:
-      type: object
-      properties:
-        refresh:
-          type: string
-          minLength: 1
-      required:
-      - refresh
-    MarkedCount:
-      type: object
-      properties:
-        marked_count:
-          type: integer
-      required:
-      - marked_count
     Message:
       type: object
       description: |-
@@ -1335,6 +1352,16 @@ components:
         is_read:
           type: boolean
           title: Прочитано
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MessageStatusEnum'
+          readOnly: true
+          title: Статус
+        attachment:
+          type: string
+          format: uri
+          nullable: true
+          title: Вложение
       required:
       - content
       - created_at
@@ -1343,7 +1370,15 @@ components:
       - receiver_name
       - sender
       - sender_name
+      - status
       - updated_at
+    MessageError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
     MessageRequest:
       type: object
       description: |-
@@ -1360,14 +1395,36 @@ components:
         is_read:
           type: boolean
           title: Прочитано
+        attachment:
+          type: string
+          format: binary
+          nullable: true
+          title: Вложение
       required:
       - content
       - receiver
+    MessageStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
+    MessageStatusEnum:
+      enum:
+      - sent
+      - delivered
+      - read
+      type: string
+      description: |-
+        * `sent` - Отправлено
+        * `delivered` - Доставлено
+        * `read` - Прочитано
     Notification:
       type: object
       description: |-
         Сериализатор уведомлений.
-        Показывает имя инициатора и строковое представление цели.
+        Показывает имя инициатора, строковое представление цели и тип уведомления.
       properties:
         id:
           type: integer
@@ -1384,7 +1441,13 @@ components:
           readOnly: true
         target_repr:
           type: string
+          description: Возвращает читаемое представление связанного объекта.
           readOnly: true
+        notification_type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          readOnly: true
+          title: Тип уведомления
         is_read:
           type: boolean
           title: Прочитано
@@ -1403,46 +1466,38 @@ components:
       - actor_name
       - created_at
       - id
+      - notification_type
       - target_repr
       - updated_at
       - verb
-    OverviewStats:
+    NotificationError:
       type: object
-      description: Обзорные показатели по всей системе.
       properties:
-        total_institutions:
-          type: integer
-          title: Всего учреждений
-        total_hospitals:
-          type: integer
-          title: Всего больниц
-        total_clinics:
-          type: integer
-          title: Всего клиник
-        total_doctors:
-          type: integer
-          title: Всего врачей
-        total_patients:
-          type: integer
-          title: Всего пациентов
-        total_requests:
-          type: integer
-          title: Всего заявок
-        accepted_requests:
-          type: integer
-          title: Принятые заявки
-        rejected_requests:
-          type: integer
-          title: Отклонённые заявки
+        error:
+          type: string
       required:
-      - accepted_requests
-      - rejected_requests
-      - total_clinics
-      - total_doctors
-      - total_hospitals
-      - total_institutions
-      - total_patients
-      - total_requests
+      - error
+    NotificationMarkedCount:
+      type: object
+      properties:
+        marked_count:
+          type: integer
+      required:
+      - marked_count
+    NotificationTypeEnum:
+      enum:
+      - info
+      - warning
+      - success
+      - error
+      - system
+      type: string
+      description: |-
+        * `info` - Информация
+        * `warning` - Предупреждение
+        * `success` - Успех
+        * `error` - Ошибка
+        * `system` - Системное
     OwnershipTypeEnum:
       enum:
       - state
@@ -1453,14 +1508,12 @@ components:
         * `private` - Частное
     PatchedAppointmentStatusUpdateRequest:
       type: object
+      description: Обновление статуса заявки (врач/админ).
       properties:
         status:
-          $ref: '#/components/schemas/StatusEnum'
+          $ref: '#/components/schemas/Status7f4Enum'
     PatchedInstitutionAdminRequest:
       type: object
-      description: |-
-        Для операций super_admin и institution_admin.
-        Полный набор данных + отделения (read-only).
       properties:
         name:
           type: string
@@ -1526,20 +1579,19 @@ components:
         is_active:
           type: boolean
           title: Активно
-    PatientRegistrationRequest:
+    PatchedUserRequest:
       type: object
       properties:
         phone_number:
           type: string
           minLength: 1
-        password:
+          description: E.164 format preferred (+992...)
+          maxLength: 32
+        email:
           type: string
-          writeOnly: true
-          minLength: 1
-        password_confirm:
-          type: string
-          writeOnly: true
-          minLength: 1
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
         first_name:
           type: string
           title: Имя
@@ -1548,21 +1600,18 @@ components:
           type: string
           title: Фамилия
           maxLength: 150
-        email:
-          type: string
-          format: email
-          minLength: 1
-          title: Адрес электронной почты
-          maxLength: 254
-        date_of_birth:
-          type: string
-          format: date
+        user_type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        institution:
+          type: integer
           nullable: true
-          title: Дата рождения
+    PhoneTokenObtainPair:
+      type: object
+      description: Позволяет логиниться по phone_number вместо username.
+      properties:
+        phone_number:
+          type: string
       required:
-      - email
-      - password
-      - password_confirm
       - phone_number
     RatingEnum:
       enum:
@@ -1598,6 +1647,40 @@ components:
       - id
       - name
       - slug
+    RegisterRequest:
+      type: object
+      properties:
+        phone_number:
+          type: string
+          minLength: 1
+          description: E.164 format preferred (+992...)
+          maxLength: 32
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        user_type:
+          $ref: '#/components/schemas/UserTypeEnum'
+        institution:
+          type: integer
+          nullable: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 6
+      required:
+      - password
+      - phone_number
+      - user_type
     ReviewCreateRequest:
       type: object
       description: |-
@@ -1672,30 +1755,50 @@ components:
       - patient_phone
       - rating
       - updated_at
-    Status:
+    ReviewList:
       type: object
       properties:
-        status:
+        id:
+          type: integer
+          readOnly: true
+        patient_name:
           type: string
+          readOnly: true
+        doctor_name:
+          type: string
+          readOnly: true
+        rating:
+          allOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          title: Оценка
+          minimum: 0
+          maximum: 32767
+        comment:
+          type: string
+          title: Комментарий
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
       required:
-      - status
-    StatusEnum:
+      - created_at
+      - doctor_name
+      - id
+      - patient_name
+      - rating
+    Status7f4Enum:
       enum:
       - pending
       - accepted
       - rejected
+      - cancelled
       type: string
       description: |-
         * `pending` - Ожидает
         * `accepted` - Принята
         * `rejected` - Отклонена
-    Success:
-      type: object
-      properties:
-        detail:
-          type: string
-      required:
-      - detail
+        * `cancelled` - Отменена
     TokenRefresh:
       type: object
       properties:
@@ -1715,13 +1818,21 @@ components:
           minLength: 1
       required:
       - refresh
-    UserProfile:
+    User:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         phone_number:
           type: string
-          readOnly: true
-          title: Номер телефона
+          description: E.164 format preferred (+992...)
+          maxLength: 32
+        email:
+          type: string
+          format: email
+          title: Адрес электронной почты
+          maxLength: 254
         first_name:
           type: string
           title: Имя
@@ -1730,69 +1841,52 @@ components:
           type: string
           title: Фамилия
           maxLength: 150
-        email:
+        full_name:
           type: string
-          format: email
-          title: Адрес электронной почты
-          maxLength: 254
-        date_of_birth:
-          type: string
-          format: date
-          nullable: true
-          title: Дата рождения
+          readOnly: true
         user_type:
-          allOf:
-          - $ref: '#/components/schemas/UserTypeEnum'
-          readOnly: true
-        institution_name:
-          type: string
-          readOnly: true
-        is_verified:
+          $ref: '#/components/schemas/UserTypeEnum'
+        institution:
+          type: integer
+          nullable: true
+        is_super_admin_flag:
           type: boolean
           readOnly: true
-          title: Верифицирован
+          title: Is super admin
+          description: System-wide super admin with full access
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата регистрации
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Последний вход
       required:
-      - email
-      - institution_name
-      - is_verified
+      - date_joined
+      - full_name
+      - id
+      - is_super_admin_flag
+      - last_login
       - phone_number
       - user_type
-    UserProfileRequest:
-      type: object
-      properties:
-        first_name:
-          type: string
-          title: Имя
-          maxLength: 150
-        last_name:
-          type: string
-          title: Фамилия
-          maxLength: 150
-        email:
-          type: string
-          format: email
-          minLength: 1
-          title: Адрес электронной почты
-          maxLength: 254
-        date_of_birth:
-          type: string
-          format: date
-          nullable: true
-          title: Дата рождения
-      required:
-      - email
     UserTypeEnum:
       enum:
-      - patient
+      - super_user
+      - admin
       - doctor
-      - institution_admin
-      - super_admin
+      - patient
+      - staff
       type: string
       description: |-
-        * `patient` - Пациент
-        * `doctor` - Врач
-        * `institution_admin` - Администратор учреждения
-        * `super_admin` - Супер администратор
+        * `super_user` - Super User
+        * `admin` - Institution Admin
+        * `doctor` - Doctor
+        * `patient` - Patient
+        * `staff` - Staff
   securitySchemes:
     jwtAuth:
       type: http

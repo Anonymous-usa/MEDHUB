@@ -9,6 +9,7 @@ stats_patterns = [
 
     # 🏥 Статистика по конкретному учреждению
     path("institution/<int:pk>/", InstitutionStatsView.as_view(), name="stats-institution"),
+
 ]
 
 urlpatterns = [

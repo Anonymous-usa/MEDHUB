@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .serializers import SystemOverviewStatsSerializer, InstitutionSpecificStatsSerializer
 from .permissions import IsSuperAdmin, IsInstitutionOwnerOrSuper
 from institutions.models import Institution
-
+from datetime import date
 User = apps.get_model(*settings.AUTH_USER_MODEL.split('.')) if isinstance(settings.AUTH_USER_MODEL, str) else settings.AUTH_USER_MODEL
 Appointment = apps.get_model('appointments', 'AppointmentRequest')
 
@@ -17,15 +17,19 @@ Appointment = apps.get_model('appointments', 'AppointmentRequest')
 @extend_schema(
     tags=["Statistics"],
     summary="Общая статистика по системе",
-    description="Возвращает агрегированную статистику по всей системе. "
-                "Доступно только супер‑админу.",
-    responses={200: SystemOverviewStatsSerializer},
+    description="...",
+    responses={200: SystemOverviewStatsSerializer},  # ✅ правильно
 )
+
 class OverviewStatsView(APIView):
     permission_classes = [IsSuperAdmin]
 
     def get(self, request):
+        today = date.today()
         data = {
+            "period_start": today,
+            "period_end": today,
+
             "total_institutions": Institution.objects.count(),
             "total_hospitals": Institution.objects.filter(institution_type="hospital").count(),
             "total_clinics": Institution.objects.filter(institution_type="clinic").count(),
@@ -34,7 +38,7 @@ class OverviewStatsView(APIView):
             "total_requests": Appointment.objects.count(),
             "accepted_requests": Appointment.objects.filter(status=Appointment.Status.ACCEPTED).count(),
             "rejected_requests": Appointment.objects.filter(status=Appointment.Status.REJECTED).count(),
-        }
+            }
         serializer = SystemOverviewStatsSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
