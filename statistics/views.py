@@ -18,7 +18,7 @@ Appointment = apps.get_model('appointments', 'AppointmentRequest')
     tags=["Statistics"],
     summary="Общая статистика по системе",
     description="...",
-    responses={200: SystemOverviewStatsSerializer},  # ✅ правильно
+    responses={200: SystemOverviewStatsSerializer}, 
 )
 
 class OverviewStatsView(APIView):
