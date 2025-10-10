@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from accounts.models import User
 
 from .models import AppointmentRequest
 from .serializers import (
@@ -77,11 +78,21 @@ class DoctorAppointmentListView(generics.ListAPIView):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return AppointmentRequest.objects.none()
+
+        if self.request.user.user_type == User.UserType.SUPERUSER:
+            # Controller sees all pending appointments
+            return AppointmentRequest.objects.filter(
+                is_active=True,
+                status=AppointmentRequest.Status.PENDING
+            ).order_by('-created_at')
+
+        # Doctor sees only their own pending appointments
         return AppointmentRequest.objects.filter(
-            doctor=self.request.user,
-            is_active=True,
-            status=AppointmentRequest.Status.PENDING
-        ).order_by('-created_at')
+        doctor=self.request.user,
+        is_active=True,
+        status=AppointmentRequest.Status.PENDING
+    ).order_by('-created_at')
+
 
 
 @extend_schema(
