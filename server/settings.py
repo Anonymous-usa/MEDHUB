@@ -63,13 +63,14 @@ ASGI_APPLICATION = 'server.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'medhub'),
-        'USER': os.getenv('POSTGRES_USER', 'medhub'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', '1234'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': 'medhub',
+        'USER': 'medhub_user',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',  # or 'db' if using Docker
+        'PORT': '5432',
     }
 }
+
 
 # 7. Authentication
 AUTH_USER_MODEL = 'accounts.User'
